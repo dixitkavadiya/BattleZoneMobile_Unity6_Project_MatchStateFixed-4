@@ -11,7 +11,7 @@ namespace BattleZoneMobile
         [SerializeField] private int botCount = 5;
         [SerializeField] private Vector2 spawnArea = new Vector2(130f, 130f);
         [SerializeField] private float spawnHeight = 1f;
-        [SerializeField] private Transform[] explicitSpawnPoints;
+        [SerializeField] private Transform[] explicitSpawnPoints = new Transform[0];
         [SerializeField] private Transform[] coverPoints;
         [SerializeField] private BotAI.DifficultyPreset difficulty = BotAI.DifficultyPreset.Normal;
         [SerializeField] private SafeZoneController safeZone;
@@ -19,6 +19,7 @@ namespace BattleZoneMobile
         [SerializeField] private float dropRouteJitter = 0.11f;
 
         private readonly List<BotAI> activeBots = new List<BotAI>();
+        private readonly List<Transform> discoveredSpawnPoints = new List<Transform>();
         private GameManager gameManager;
 
         public void ConfigureForRuntime(BotAI prefab, int count, Vector2 area)
@@ -31,6 +32,11 @@ namespace BattleZoneMobile
         public void SetCoverPoints(Transform[] points)
         {
             coverPoints = points;
+        }
+
+        public void SetSpawnPoints(Transform[] points)
+        {
+            explicitSpawnPoints = points ?? new Transform[0];
         }
 
         public int AliveCount
@@ -123,6 +129,7 @@ namespace BattleZoneMobile
                 return;
             }
 
+            RefreshDiscoveredSpawnPoints();
             for (int i = 0; i < botCount; i++)
             {
                 Vector3 point = GetSpawnPoint(i);
@@ -190,7 +197,16 @@ namespace BattleZoneMobile
         {
             if (explicitSpawnPoints != null && index < explicitSpawnPoints.Length && explicitSpawnPoints[index] != null)
             {
-                return explicitSpawnPoints[index].position;
+                return ResolveSpawnPointPosition(explicitSpawnPoints[index].position);
+            }
+
+            if (discoveredSpawnPoints.Count > 0)
+            {
+                Transform discovered = discoveredSpawnPoints[Mathf.Abs(index) % discoveredSpawnPoints.Count];
+                if (discovered != null)
+                {
+                    return ResolveSpawnPointPosition(discovered.position);
+                }
             }
 
             Vector2 random = Random.insideUnitCircle * 0.5f;
@@ -208,6 +224,67 @@ namespace BattleZoneMobile
 
             candidate.y = spawnHeight;
             return candidate;
+        }
+
+        private void RefreshDiscoveredSpawnPoints()
+        {
+            discoveredSpawnPoints.Clear();
+            if (explicitSpawnPoints != null && explicitSpawnPoints.Length > 0)
+            {
+                return;
+            }
+
+            Transform[] transforms = FindObjectsByType<Transform>(FindObjectsInactive.Exclude);
+            for (int i = 0; i < transforms.Length; i++)
+            {
+                Transform candidate = transforms[i];
+                if (candidate != null && IsSpawnPointCandidate(candidate))
+                {
+                    discoveredSpawnPoints.Add(candidate);
+                }
+            }
+        }
+
+        private static bool IsSpawnPointCandidate(Transform candidate)
+        {
+            string objectName = candidate.name;
+            if (string.IsNullOrEmpty(objectName))
+            {
+                return false;
+            }
+
+            string lowerName = objectName.ToLowerInvariant();
+            if (lowerName.Contains("player") ||
+                lowerName.Contains("waiting") ||
+                lowerName.Contains("vehicle") ||
+                lowerName.Contains("loot") ||
+                lowerName.Contains("airdrop"))
+            {
+                return false;
+            }
+
+            return lowerName.Contains("botspawn") ||
+                lowerName.Contains("bot spawn") ||
+                lowerName.Contains("bot_spawn") ||
+                lowerName.Contains("matchspawn") ||
+                lowerName.Contains("match spawn") ||
+                lowerName.Contains("match_spawn");
+        }
+
+        private Vector3 ResolveSpawnPointPosition(Vector3 source)
+        {
+            if (NavMesh.SamplePosition(source, out NavMeshHit navHit, 8f, NavMesh.AllAreas))
+            {
+                return navHit.position;
+            }
+
+            Vector3 rayOrigin = source + Vector3.up * 60f;
+            if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit groundHit, 140f, ~0, QueryTriggerInteraction.Ignore))
+            {
+                return groundHit.point + Vector3.up * spawnHeight;
+            }
+
+            return new Vector3(source.x, Mathf.Max(source.y, spawnHeight), source.z);
         }
 
         private static Vector3 FindGroundPoint(Vector3 source)

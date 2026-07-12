@@ -1,4 +1,39 @@
-# BattleZone Mobile - Movement Regression Report
+# BattleZone Mobile - Regression Report
+
+## Stable Post-Recovery Gameplay Checkpoint - 2026-07-12
+
+Checkpoint commit target:
+
+- `Create stable post-recovery gameplay checkpoint`
+
+Scope:
+
+- Current project only: `BattleZoneMobile_Unity6_Project_MatchStateFixed-4`.
+- No redesign or replacement of the working movement system.
+- No changes to the recovered Animator placement, red overlay behavior, or startup drop gravity ownership.
+
+Regression audit results:
+
+- PASS: Static audit found one runtime `Player` creation path in `BattleZoneRuntimeBuilder.BuildPlayer`.
+- PASS: Static audit found one `CharacterController` added to the Player root.
+- PASS: Static audit found `ReliablePlayerMovement` and `ThirdPersonMobileController` both attached to the Player root, with `ThirdPersonMobileController` ground locomotion bypassed by `ReliablePlayerMovement`.
+- PASS: `ReliablePlayerMovement` owns Combat ground movement.
+- PASS: `BattleRoyaleMatchFlow.MatchFlowOwnsLocalPlayerPose` owns `Lobby`, `Waiting`, `Aircraft`, `Freefall`, `Parachute`, and `Landing` pose control until Combat.
+- PASS: Static audit found Unity `Animator` creation only on `LowPolyOriginalHumanoid`, the visual child.
+- PASS: Visual child `Animator.applyRootMotion` is explicitly false.
+- PASS: `DamageFlash` remains inactive by default and direct-damage-only; safe-zone damage does not trigger the full-screen flash.
+- PASS: Large `ReliablePlayerMovement` debug overlay is disabled by default and is available through the inspector toggle `Show Debug Overlay`.
+- PASS: `BotManager.explicitSpawnPoints` warning is fixed by initializing the serialized array and adding safe runtime spawn-point discovery when it is empty.
+- PASS: C# runtime script compile check completed with zero errors and zero warnings.
+
+Unity Editor verification:
+
+- NOT RUN: Unity batch mode timed out while launching the Unity licensing client in this environment.
+- Manual Play Mode verification is still required in Unity Hub after the license is active.
+
+Remaining known workspace note:
+
+- `ProjectSettings/GraphicsSettings.asset` was already modified before this checkpoint pass and was left untouched.
 
 ## Last Known Working Version
 

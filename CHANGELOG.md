@@ -1,5 +1,16 @@
 # BattleZone Mobile Changelog
 
+## Stable Post-Recovery Gameplay Checkpoint
+
+- Created a stable checkpoint after the movement, Animator root override, red damage overlay, and startup drop gravity ownership recoveries.
+- Kept the working movement system intact; no redesign or replacement of `ReliablePlayerMovement`, `ThirdPersonMobileController`, joystick, camera, Animator placement, or damage overlay logic.
+- Disabled the large `ReliablePlayerMovement` debug overlay by default and exposed it through the inspector toggle `Show Debug Overlay`.
+- Fixed the `BotManager.explicitSpawnPoints` compiler warning by initializing the serialized array.
+- Added safe bot spawn-point discovery when explicit bot spawn points are empty, while retaining the existing NavMesh and ground-sampling fallback.
+- Ran static regression audit for Player count, CharacterController ownership, movement/pose ownership, visual-child Animator placement, root motion, and direct-damage-only `DamageFlash`.
+- Verified runtime scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+- Documented that live Unity Play Mode verification remains blocked in this environment by Unity licensing startup timeout.
+
 ## Match State Fixed
 
 - Continued from the current MovementRecovered project without rebuilding from the broken Milestone 22 project.

@@ -1,4 +1,49 @@
-# BattleZone Mobile - Match State Fixed Test Checklist
+# BattleZone Mobile - Test Checklist
+
+## Stable Post-Recovery Gameplay Checkpoint - 2026-07-12
+
+Automated/static checks run in this workspace:
+
+- PASS: `git diff --check` completed with no whitespace or patch-format issues.
+- PASS: Runtime C# scripts compiled with Unity 6.5 Roslyn references with zero errors and zero warnings.
+- PASS: Static audit confirms one runtime Player creation path in `BattleZoneRuntimeBuilder.BuildPlayer`.
+- PASS: Static audit confirms one Player-root `CharacterController`.
+- PASS: Static audit confirms Combat ground locomotion remains owned by `ReliablePlayerMovement`.
+- PASS: Static audit confirms Aircraft/Freefall/Parachute/Landing pose control remains owned by `BattleRoyaleMatchFlow`.
+- PASS: Static audit confirms Unity `Animator` is created on visual child `LowPolyOriginalHumanoid`, not on Player root.
+- PASS: Static audit confirms visual child `Animator.applyRootMotion = false`.
+- PASS: Static audit confirms `DamageFlash` is inactive at rest and safe-zone damage does not call `FlashDamage`.
+- PASS: `ReliablePlayerMovement` debug overlay defaults OFF through inspector toggle `Show Debug Overlay`.
+- PASS: `BotManager.explicitSpawnPoints` compile warning is fixed, with empty-list spawn discovery fallback.
+
+Unity Editor status in this environment:
+
+- BLOCKED: Unity batch mode timed out while launching the Unity licensing client.
+- NOT RUN HERE: Live Play Mode verification for Start Match, aircraft, freefall, parachute, landing, movement, combat, vehicles, Match Summary, and restart.
+
+Required manual Unity Play Mode verification:
+
+1. Open `Assets/BattleZoneMobile/Scenes/BZ_Main.unity`.
+2. Press Play.
+3. Press `START MATCH`.
+4. Confirm there is exactly one active Player in the Hierarchy.
+5. Confirm the Player root has exactly one active `CharacterController`.
+6. Confirm Player root has no `Animator`.
+7. Confirm `LowPolyOriginalHumanoid` has the Animator and `Apply Root Motion` is off.
+8. Confirm the large Reliable Player Movement overlay is hidden by default.
+9. Enable `Show Debug Overlay` only when debugging and confirm it reports phase, pose owner, vertical velocity, and gravity suppression.
+10. Confirm aircraft sequence remains stable.
+11. Confirm freefall/parachute path remains stable.
+12. Confirm landing is smooth with no huge negative CharacterController Y velocity.
+13. Confirm WASD moves after landing.
+14. Confirm mobile joystick moves after landing.
+15. Confirm sprint, jump, crouch, and prone work.
+16. Confirm aim, fire, reload, and weapon switching work.
+17. Confirm vehicle enter/exit works.
+18. Confirm Match Summary appears only for valid victory/defeat.
+19. Confirm restarting a match resets player, bots, timers, controls, and red overlay.
+20. Confirm no permanent red overlay appears during normal gameplay.
+21. Confirm no red Console errors.
 
 ## Package Checks
 

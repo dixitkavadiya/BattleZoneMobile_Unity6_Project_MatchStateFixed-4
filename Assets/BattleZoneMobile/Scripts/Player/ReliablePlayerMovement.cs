@@ -29,7 +29,7 @@ namespace BattleZoneMobile
         [SerializeField] private float groundProbeDistance = 0.28f;
 
         [Header("Editor Debug")]
-        [SerializeField] private bool showEditorDebug = true;
+        [SerializeField] private bool showDebugOverlay = false;
 
         private Vector2 keyboardInput;
         private Vector2 joystickInput;
@@ -481,7 +481,7 @@ namespace BattleZoneMobile
 
         private void OnGUI()
         {
-            if (!showEditorDebug)
+            if (!showDebugOverlay)
             {
                 return;
             }
