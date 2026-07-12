@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a7c61a9922e4c279a7e2394f7bd18a3, type: 3}
+  m_Name: VA_WPN_Rook17_AR_VS
+  m_EditorClassIdentifier: Assembly-CSharp::BattleZoneMobile.BattleZoneVisualAssetDefinition
+  assetId: WPN_Rook17_AR_VS
+  displayName: Rook-17 Assault Rifle Visual Slot
+  category: 1
+  productionState: 2
+  originalityNotes: Original BattleZone Mobile art slot. Do not copy BGMI/PUBG assets,
+    map layouts, UI, sounds, silhouettes, or branding.
+  visualPrefab: {fileID: 4219311385095389890, guid: dc425b4f267f14688bd8ad92338ec7d4, type: 3}
+  lod0Prefab: {fileID: 4219311385095389890, guid: dc425b4f267f14688bd8ad92338ec7d4, type: 3}
+  lod1Prefab: {fileID: 4219311385095389890, guid: dc425b4f267f14688bd8ad92338ec7d4, type: 3}
+  lod2Prefab: {fileID: 4219311385095389890, guid: dc425b4f267f14688bd8ad92338ec7d4, type: 3}
+  animatorController: {fileID: 0}
+  materialPalette:
+  - {fileID: 2100000, guid: 5da1e8ebbd7ca4773a04f13098bebd09, type: 2}
+  - {fileID: 2100000, guid: 220da47bb43d84afd9dcc5459740ee60, type: 2}
+  maxTextureResolution: {x: 1024, y: 512}
+  androidCompression: ASTC 6x6 target, ASTC 8x8 for low-memory props, ETC2 fallback
+    when ASTC is unavailable.
+  usesURPCompatibleShaders: 1
+  lodRequirement:
+    lod0TriangleBudget: 2800
+    lod1TriangleBudget: 1400
+    lod2TriangleBudget: 550
+    lod0ScreenRelativeHeight: 0.25
+    lod1ScreenRelativeHeight: 0.09
+    lod2ScreenRelativeHeight: 0.025
+  requiredSockets:
+  - Muzzle
+  - Optic
+  - Magazine
+  - Grip
+  - ShellEject
+  gameplayReady: 0
+  replacementNotes: Original assault rifle silhouette. Do not trace or approximate
+    existing commercial weapon/game silhouettes.

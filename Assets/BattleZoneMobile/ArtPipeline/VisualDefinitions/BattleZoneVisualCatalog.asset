@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92845bf090d8478b975796d839d7c73c, type: 3}
+  m_Name: BattleZoneVisualCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::BattleZoneMobile.BattleZoneVisualCatalog
+  definitions:
+  - {fileID: 11400000, guid: b26002d6c45b845a1bfee13734947024, type: 2}
+  - {fileID: 11400000, guid: 503901d313edf479b8e5a78d792518bd, type: 2}
+  - {fileID: 11400000, guid: 4cf99f351cfd24e3bb62b88ea88ace7b, type: 2}
+  - {fileID: 11400000, guid: e76b3624a17c6432cb7dde82ecb44f9e, type: 2}
+  - {fileID: 11400000, guid: 947266228b1a844519089c31e91fdaad, type: 2}
+  - {fileID: 11400000, guid: 60bc99536707f4242969ffa8727fb1ff, type: 2}
+  - {fileID: 11400000, guid: 6f0b74f94e7834e81bbba2711347922b, type: 2}
+  - {fileID: 11400000, guid: d10cb2e62e5f54e3382f35796de6771e, type: 2}

@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a7c61a9922e4c279a7e2394f7bd18a3, type: 3}
+  m_Name: VA_BLD_EnterableHouse_VS
+  m_EditorClassIdentifier: Assembly-CSharp::BattleZoneMobile.BattleZoneVisualAssetDefinition
+  assetId: BLD_EnterableHouse_VS
+  displayName: Enterable House Visual Slot
+  category: 3
+  productionState: 2
+  originalityNotes: Original BattleZone Mobile art slot. Do not copy BGMI/PUBG assets,
+    map layouts, UI, sounds, silhouettes, or branding.
+  visualPrefab: {fileID: 1596660725557785693, guid: b74860abd16ab479c81cb82f0f8d336e, type: 3}
+  lod0Prefab: {fileID: 1596660725557785693, guid: b74860abd16ab479c81cb82f0f8d336e, type: 3}
+  lod1Prefab: {fileID: 1596660725557785693, guid: b74860abd16ab479c81cb82f0f8d336e, type: 3}
+  lod2Prefab: {fileID: 1596660725557785693, guid: b74860abd16ab479c81cb82f0f8d336e, type: 3}
+  animatorController: {fileID: 0}
+  materialPalette:
+  - {fileID: 2100000, guid: a032f735339124f6084149f2bea05428, type: 2}
+  - {fileID: 2100000, guid: 220da47bb43d84afd9dcc5459740ee60, type: 2}
+  maxTextureResolution: {x: 1024, y: 1024}
+  androidCompression: ASTC 6x6 target, ASTC 8x8 for low-memory props, ETC2 fallback
+    when ASTC is unavailable.
+  usesURPCompatibleShaders: 1
+  lodRequirement:
+    lod0TriangleBudget: 9000
+    lod1TriangleBudget: 4200
+    lod2TriangleBudget: 1500
+    lod0ScreenRelativeHeight: 0.25
+    lod1ScreenRelativeHeight: 0.09
+    lod2ScreenRelativeHeight: 0.025
+  requiredSockets:
+  - Doorway
+  - LootAnchor
+  - InteriorAudio
+  gameplayReady: 0
+  replacementNotes: Modular house kit with interior collision authored as separate
+    wall pieces.

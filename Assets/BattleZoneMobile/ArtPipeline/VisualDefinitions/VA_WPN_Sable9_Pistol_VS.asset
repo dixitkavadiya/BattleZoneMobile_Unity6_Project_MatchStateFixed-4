@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a7c61a9922e4c279a7e2394f7bd18a3, type: 3}
+  m_Name: VA_WPN_Sable9_Pistol_VS
+  m_EditorClassIdentifier: Assembly-CSharp::BattleZoneMobile.BattleZoneVisualAssetDefinition
+  assetId: WPN_Sable9_Pistol_VS
+  displayName: Sable-9 Pistol Visual Slot
+  category: 1
+  productionState: 2
+  originalityNotes: Original BattleZone Mobile art slot. Do not copy BGMI/PUBG assets,
+    map layouts, UI, sounds, silhouettes, or branding.
+  visualPrefab: {fileID: 1523811587674556287, guid: 2367ff883761045e08b059311a52c003, type: 3}
+  lod0Prefab: {fileID: 1523811587674556287, guid: 2367ff883761045e08b059311a52c003, type: 3}
+  lod1Prefab: {fileID: 1523811587674556287, guid: 2367ff883761045e08b059311a52c003, type: 3}
+  lod2Prefab: {fileID: 1523811587674556287, guid: 2367ff883761045e08b059311a52c003, type: 3}
+  animatorController: {fileID: 0}
+  materialPalette:
+  - {fileID: 2100000, guid: 5da1e8ebbd7ca4773a04f13098bebd09, type: 2}
+  - {fileID: 2100000, guid: 220da47bb43d84afd9dcc5459740ee60, type: 2}
+  maxTextureResolution: {x: 512, y: 512}
+  androidCompression: ASTC 6x6 target, ASTC 8x8 for low-memory props, ETC2 fallback
+    when ASTC is unavailable.
+  usesURPCompatibleShaders: 1
+  lodRequirement:
+    lod0TriangleBudget: 1500
+    lod1TriangleBudget: 800
+    lod2TriangleBudget: 300
+    lod0ScreenRelativeHeight: 0.25
+    lod1ScreenRelativeHeight: 0.09
+    lod2ScreenRelativeHeight: 0.025
+  requiredSockets:
+  - Muzzle
+  - Magazine
+  - ShellEject
+  gameplayReady: 0
+  replacementNotes: Original compact sidearm with separate muzzle, magazine, and
+    shell ejection sockets.

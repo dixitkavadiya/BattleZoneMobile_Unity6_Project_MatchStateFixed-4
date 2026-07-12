@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5a7c61a9922e4c279a7e2394f7bd18a3, type: 3}
+  m_Name: VA_LOOT_FieldCrate_VS
+  m_EditorClassIdentifier: Assembly-CSharp::BattleZoneMobile.BattleZoneVisualAssetDefinition
+  assetId: LOOT_FieldCrate_VS
+  displayName: Loot Crate Visual Slot
+  category: 5
+  productionState: 2
+  originalityNotes: Original BattleZone Mobile art slot. Do not copy BGMI/PUBG assets,
+    map layouts, UI, sounds, silhouettes, or branding.
+  visualPrefab: {fileID: 5803088756631135333, guid: 94896616f57104c4fb1f70bede51206b, type: 3}
+  lod0Prefab: {fileID: 5803088756631135333, guid: 94896616f57104c4fb1f70bede51206b, type: 3}
+  lod1Prefab: {fileID: 5803088756631135333, guid: 94896616f57104c4fb1f70bede51206b, type: 3}
+  lod2Prefab: {fileID: 5803088756631135333, guid: 94896616f57104c4fb1f70bede51206b, type: 3}
+  animatorController: {fileID: 0}
+  materialPalette:
+  - {fileID: 2100000, guid: c168ad8564ff24ca882a848a5de00496, type: 2}
+  - {fileID: 2100000, guid: 5da1e8ebbd7ca4773a04f13098bebd09, type: 2}
+  maxTextureResolution: {x: 512, y: 512}
+  androidCompression: ASTC 6x6 target, ASTC 8x8 for low-memory props, ETC2 fallback
+    when ASTC is unavailable.
+  usesURPCompatibleShaders: 1
+  lodRequirement:
+    lod0TriangleBudget: 1200
+    lod1TriangleBudget: 600
+    lod2TriangleBudget: 220
+    lod0ScreenRelativeHeight: 0.25
+    lod1ScreenRelativeHeight: 0.09
+    lod2ScreenRelativeHeight: 0.025
+  requiredSockets:
+  - PickupAnchor
+  - GlowAnchor
+  gameplayReady: 0
+  replacementNotes: Loot visuals must preserve pickup collider and prompt anchor
+    positions.
