@@ -53,9 +53,12 @@ namespace BattleZoneMobile
         private Coroutine killFeedRoutine;
         private Coroutine matchAnnouncementRoutine;
         private float crosshairCurrentSize;
+        private bool zoneWarningOverlayActive;
         private readonly Vector2 minimapWorldHalfExtents = new Vector2(260f, 260f);
         private int latestAliveCount = 1;
         private int latestKillCount;
+        private const float DamageFlashAlpha = 0.42f;
+        private const float ZoneWarningAlpha = 0.16f;
 
         public void ConfigureForRuntime(
             GameObject mainMenu,
@@ -115,6 +118,7 @@ namespace BattleZoneMobile
             hudTelemetry = telemetry;
             crosshairCurrentSize = crosshairBaseSize;
             SetFlightPathPreview(Vector3.zero, Vector3.forward, false);
+            ResetDamageFlash();
         }
 
         private void Update()
@@ -136,6 +140,7 @@ namespace BattleZoneMobile
             SetPanel(victoryPanel, false);
             SetPanel(inventoryPanel, false);
             SetPanel(matchSummaryPanel, false);
+            ResetDamageFlash();
             SetMatchPhase("MENU", "Ready");
             SetFlightPathPreview(Vector3.zero, Vector3.forward, false);
         }
@@ -148,6 +153,7 @@ namespace BattleZoneMobile
             SetPanel(victoryPanel, false);
             SetPanel(inventoryPanel, false);
             SetPanel(matchSummaryPanel, false);
+            ResetDamageFlash();
         }
 
         public void ShowGameOver()
@@ -158,6 +164,7 @@ namespace BattleZoneMobile
             SetPanel(victoryPanel, false);
             SetPanel(inventoryPanel, false);
             SetPanel(matchSummaryPanel, false);
+            ResetDamageFlash();
         }
 
         public void ShowVictory()
@@ -168,6 +175,7 @@ namespace BattleZoneMobile
             SetPanel(victoryPanel, true);
             SetPanel(inventoryPanel, false);
             SetPanel(matchSummaryPanel, false);
+            ResetDamageFlash();
         }
 
         public void SetHealth(float current, float max)
@@ -245,16 +253,16 @@ namespace BattleZoneMobile
 
         public void SetZone(float radius, float secondsUntilShrink, bool outside, float nextRadius = -1f, int phase = 1)
         {
-            if (zoneText == null)
-            {
-                return;
-            }
-
             string status = outside ? "Outside zone" : "Safe";
             string next = nextRadius > 0f ? $" | Next {Mathf.CeilToInt(nextRadius)}m" : string.Empty;
-            zoneText.text = $"{status} | P{Mathf.Max(1, phase)} | Zone {Mathf.CeilToInt(radius)}m{next} | Shrink {Mathf.CeilToInt(secondsUntilShrink)}s";
-            zoneText.color = outside ? dangerZoneColor : safeZoneColor;
+            if (zoneText != null)
+            {
+                zoneText.text = $"{status} | P{Mathf.Max(1, phase)} | Zone {Mathf.CeilToInt(radius)}m{next} | Shrink {Mathf.CeilToInt(secondsUntilShrink)}s";
+                zoneText.color = outside ? dangerZoneColor : safeZoneColor;
+            }
+
             hudTelemetry?.SetZone(radius, outside, nextRadius);
+            SetZoneWarningOverlay(outside);
         }
 
         public void SetMatchTimer(float seconds)
@@ -343,6 +351,7 @@ namespace BattleZoneMobile
         public void HideMatchSummary()
         {
             SetPanel(matchSummaryPanel, false);
+            ResetDamageFlash();
         }
 
         public void ShowMatchSummary(
@@ -386,6 +395,7 @@ namespace BattleZoneMobile
             }
 
             SetPanel(matchSummaryPanel, true);
+            ResetDamageFlash();
         }
 
         public void AddKillFeed(string message)
@@ -438,6 +448,17 @@ namespace BattleZoneMobile
             flashRoutine = StartCoroutine(FlashRoutine());
         }
 
+        public void SetZoneWarningOverlay(bool outside)
+        {
+            zoneWarningOverlayActive = outside;
+            if (damageFlash == null || flashRoutine != null)
+            {
+                return;
+            }
+
+            SetDamageFlashAlpha(zoneWarningOverlayActive ? ZoneWarningAlpha : 0f);
+        }
+
         private void ShowPickupMessage(string message)
         {
             if (pickupMessageText == null)
@@ -482,20 +503,47 @@ namespace BattleZoneMobile
         private IEnumerator FlashRoutine()
         {
             Color color = damageFlash.color;
-            color.a = 0.42f;
+            color.a = DamageFlashAlpha;
             damageFlash.color = color;
 
-            while (damageFlash.color.a > 0.01f)
+            while (damageFlash.color.a > (zoneWarningOverlayActive ? ZoneWarningAlpha : 0f) + 0.01f)
             {
+                float fadeTargetAlpha = zoneWarningOverlayActive ? ZoneWarningAlpha : 0f;
                 color = damageFlash.color;
-                color.a = Mathf.MoveTowards(color.a, 0f, flashFadeSpeed * Time.deltaTime);
+                color.a = Mathf.MoveTowards(color.a, fadeTargetAlpha, flashFadeSpeed * Time.unscaledDeltaTime);
                 damageFlash.color = color;
                 yield return null;
             }
 
-            color.a = 0f;
+            float finalTargetAlpha = zoneWarningOverlayActive ? ZoneWarningAlpha : 0f;
+            color.a = finalTargetAlpha;
             damageFlash.color = color;
             flashRoutine = null;
+        }
+
+        private void ResetDamageFlash()
+        {
+            zoneWarningOverlayActive = false;
+            if (flashRoutine != null)
+            {
+                StopCoroutine(flashRoutine);
+                flashRoutine = null;
+            }
+
+            SetDamageFlashAlpha(0f);
+        }
+
+        private void SetDamageFlashAlpha(float alpha)
+        {
+            if (damageFlash == null)
+            {
+                return;
+            }
+
+            Color color = damageFlash.color;
+            color.a = Mathf.Clamp01(alpha);
+            damageFlash.color = color;
+            damageFlash.raycastTarget = false;
         }
 
         private static void SetPanel(GameObject panel, bool active)

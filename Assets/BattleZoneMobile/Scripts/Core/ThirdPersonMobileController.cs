@@ -143,6 +143,15 @@ namespace BattleZoneMobile
             humanoidAnimator = placeholderAnimator;
         }
 
+        public void SetUnityAnimator(Animator visualAnimator)
+        {
+            animator = visualAnimator;
+            if (animator != null)
+            {
+                animator.applyRootMotion = false;
+            }
+        }
+
         private void Awake()
         {
             characterController = GetComponent<CharacterController>();

@@ -4265,12 +4265,6 @@ namespace BattleZoneMobile
             equipment.ConfigureForRuntime(health);
             KnockdownReviveState knockdown = player.AddComponent<KnockdownReviveState>();
             knockdown.ConfigureForRuntime(health, true);
-            Animator animator = player.AddComponent<Animator>();
-            RuntimeAnimatorController controllerAsset = Resources.Load<RuntimeAnimatorController>("AC_PlayerHumanoid");
-            if (controllerAsset != null)
-            {
-                animator.runtimeAnimatorController = controllerAsset;
-            }
 
             ThirdPersonMobileController controller = player.AddComponent<ThirdPersonMobileController>();
             ReliablePlayerMovement reliableMovement = player.AddComponent<ReliablePlayerMovement>();
@@ -4279,6 +4273,7 @@ namespace BattleZoneMobile
             LootPickupInteractor pickup = player.AddComponent<LootPickupInteractor>();
             VehicleInteractor vehicleInteractor = player.AddComponent<VehicleInteractor>();
             HumanoidPlaceholderAnimator placeholderAnimator = BuildHumanoidVisual(player.transform, muzzleObject.transform);
+            Animator visualAnimator = placeholderAnimator.GetComponent<Animator>();
 
             WorldDamageNumber damageNumberPrefab = BuildDamageNumberTemplate();
             ParticleSystem muzzleFlashPrefab = BuildMuzzleFlashTemplate();
@@ -4293,6 +4288,7 @@ namespace BattleZoneMobile
 
             controller.ConfigureForRuntime(uiRefs.Joystick, uiRefs.LookArea, mainCamera, pivotObject.transform);
             controller.SetHumanoidAnimator(placeholderAnimator);
+            controller.SetUnityAnimator(visualAnimator);
             controller.SetCameraCollisionMask(~(1 << playerLayer));
             reliableMovement.ConfigureForRuntime(characterController, mainCamera, uiRefs.Joystick);
             controller.enabled = true;
@@ -4380,6 +4376,14 @@ namespace BattleZoneMobile
 
             HumanoidPlaceholderAnimator placeholder = visualRoot.AddComponent<HumanoidPlaceholderAnimator>();
             placeholder.Configure(hips.transform, torso, head, leftArm, rightArm, leftLeg, rightLeg, weaponRig.transform);
+            Animator visualAnimator = visualRoot.AddComponent<Animator>();
+            visualAnimator.applyRootMotion = false;
+            visualAnimator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            RuntimeAnimatorController controllerAsset = Resources.Load<RuntimeAnimatorController>("AC_PlayerHumanoid");
+            if (controllerAsset != null)
+            {
+                visualAnimator.runtimeAnimatorController = controllerAsset;
+            }
 
             chest.name = "ChestPlate";
             visor.name = "Visor";

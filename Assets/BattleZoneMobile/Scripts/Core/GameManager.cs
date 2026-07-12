@@ -351,8 +351,21 @@ namespace BattleZoneMobile
 
         private void OnPlayerDamaged(float amount, Vector3 hitPoint, Vector3 hitNormal, GameObject source)
         {
-            uiManager?.FlashDamage();
+            if (IsSafeZoneDamageSource(source))
+            {
+                uiManager?.SetZoneWarningOverlay(true);
+            }
+            else
+            {
+                uiManager?.FlashDamage();
+            }
+
             RuntimeAudioBank.Instance?.PlayHit(hitPoint);
+        }
+
+        private static bool IsSafeZoneDamageSource(GameObject source)
+        {
+            return source != null && source.GetComponentInParent<SafeZoneController>() != null;
         }
 
         private void OnPlayerDied(GameObject source)
