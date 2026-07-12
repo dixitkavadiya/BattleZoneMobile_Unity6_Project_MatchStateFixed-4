@@ -127,6 +127,7 @@ namespace BattleZoneMobile
             matchElapsedSeconds = 0f;
             ResetMatchStats();
             uiManager?.HideMatchSummary();
+            uiManager?.ClearDamageFlash();
             uiManager?.SetMatchTimer(0f);
             uiManager?.ShowHUD();
             uiManager?.SetMatchAnnouncement("Preparing drop route");
@@ -164,6 +165,7 @@ namespace BattleZoneMobile
             if (matchFlow != null)
             {
                 yield return matchFlow.PlayOpeningSequence();
+                uiManager?.ClearDamageFlash();
             }
 
             if (matchConcluded)
@@ -304,6 +306,7 @@ namespace BattleZoneMobile
         private void ResetPlayer()
         {
             Time.timeScale = 1f;
+            uiManager?.ClearDamageFlash();
             vehicleInteractor?.ForceExitVehicle();
 
             if (playerController != null)
@@ -354,12 +357,10 @@ namespace BattleZoneMobile
             if (IsSafeZoneDamageSource(source))
             {
                 uiManager?.SetZoneWarningOverlay(true);
-            }
-            else
-            {
-                uiManager?.FlashDamage();
+                return;
             }
 
+            uiManager?.FlashDamage(amount, source, false);
             RuntimeAudioBank.Instance?.PlayHit(hitPoint);
         }
 

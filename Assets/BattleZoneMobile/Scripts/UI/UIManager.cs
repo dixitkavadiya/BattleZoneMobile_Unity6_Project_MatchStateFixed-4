@@ -38,7 +38,6 @@ namespace BattleZoneMobile
 
         [Header("Feedback")]
         [SerializeField] private Image damageFlash;
-        [SerializeField] private float flashFadeSpeed = 4f;
         [SerializeField] private float crosshairBaseSize = 80f;
         [SerializeField] private float crosshairBloomSize = 132f;
         [SerializeField] private float crosshairReturnSpeed = 7f;
@@ -54,11 +53,14 @@ namespace BattleZoneMobile
         private Coroutine matchAnnouncementRoutine;
         private float crosshairCurrentSize;
         private bool zoneWarningOverlayActive;
+        private float lastDamageFlashTime = -999f;
         private readonly Vector2 minimapWorldHalfExtents = new Vector2(260f, 260f);
         private int latestAliveCount = 1;
         private int latestKillCount;
         private const float DamageFlashAlpha = 0.42f;
-        private const float ZoneWarningAlpha = 0.16f;
+        private const float DamageFlashCooldown = 0.4f;
+        private const float DamageFlashFadeInSeconds = 0.04f;
+        private const float DamageFlashFadeOutSeconds = 0.21f;
 
         public void ConfigureForRuntime(
             GameObject mainMenu,
@@ -435,28 +437,44 @@ namespace BattleZoneMobile
 
         public void FlashDamage()
         {
+            FlashDamage(0f, null, false);
+        }
+
+        public void FlashDamage(float amount, GameObject source, bool safeZoneDamage)
+        {
             if (damageFlash == null)
             {
                 return;
             }
 
-            if (flashRoutine != null)
+            if (safeZoneDamage)
             {
-                StopCoroutine(flashRoutine);
+                SetZoneWarningOverlay(true);
+                return;
             }
 
+            float now = Time.unscaledTime;
+            if (now - lastDamageFlashTime < DamageFlashCooldown)
+            {
+                return;
+            }
+
+            lastDamageFlashTime = now;
+            StopDamageFlashRoutine();
+            SetDamageFlashAlpha(0f, false);
+            SetDamageFlashActive(true);
+            Debug.Log($"BattleZone DamageFlash triggered | source={(source != null ? source.name : "Unknown")} | amount={amount:0.##} | alpha={DamageFlashAlpha:0.##} | safeZone={safeZoneDamage}");
             flashRoutine = StartCoroutine(FlashRoutine());
         }
 
         public void SetZoneWarningOverlay(bool outside)
         {
+            bool wasOutside = zoneWarningOverlayActive;
             zoneWarningOverlayActive = outside;
-            if (damageFlash == null || flashRoutine != null)
+            if (!outside && wasOutside)
             {
-                return;
+                ClearDamageFlash();
             }
-
-            SetDamageFlashAlpha(zoneWarningOverlayActive ? ZoneWarningAlpha : 0f);
         }
 
         private void ShowPickupMessage(string message)
@@ -503,37 +521,55 @@ namespace BattleZoneMobile
         private IEnumerator FlashRoutine()
         {
             Color color = damageFlash.color;
-            color.a = DamageFlashAlpha;
-            damageFlash.color = color;
-
-            while (damageFlash.color.a > (zoneWarningOverlayActive ? ZoneWarningAlpha : 0f) + 0.01f)
+            float elapsed = 0f;
+            while (elapsed < DamageFlashFadeInSeconds)
             {
-                float fadeTargetAlpha = zoneWarningOverlayActive ? ZoneWarningAlpha : 0f;
+                elapsed += Time.unscaledDeltaTime;
                 color = damageFlash.color;
-                color.a = Mathf.MoveTowards(color.a, fadeTargetAlpha, flashFadeSpeed * Time.unscaledDeltaTime);
+                color.a = Mathf.Lerp(0f, DamageFlashAlpha, Mathf.Clamp01(elapsed / DamageFlashFadeInSeconds));
                 damageFlash.color = color;
                 yield return null;
             }
 
-            float finalTargetAlpha = zoneWarningOverlayActive ? ZoneWarningAlpha : 0f;
-            color.a = finalTargetAlpha;
+            elapsed = 0f;
+            while (elapsed < DamageFlashFadeOutSeconds)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                color = damageFlash.color;
+                color.a = Mathf.Lerp(DamageFlashAlpha, 0f, Mathf.Clamp01(elapsed / DamageFlashFadeOutSeconds));
+                damageFlash.color = color;
+                yield return null;
+            }
+
+            color.a = 0f;
             damageFlash.color = color;
+            SetDamageFlashActive(false);
             flashRoutine = null;
+        }
+
+        public void ClearDamageFlash()
+        {
+            StopDamageFlashRoutine();
+            SetDamageFlashAlpha(0f, false);
+            SetDamageFlashActive(false);
         }
 
         private void ResetDamageFlash()
         {
             zoneWarningOverlayActive = false;
+            ClearDamageFlash();
+        }
+
+        private void StopDamageFlashRoutine()
+        {
             if (flashRoutine != null)
             {
                 StopCoroutine(flashRoutine);
                 flashRoutine = null;
             }
-
-            SetDamageFlashAlpha(0f);
         }
 
-        private void SetDamageFlashAlpha(float alpha)
+        private void SetDamageFlashAlpha(float alpha, bool updateActiveState = true)
         {
             if (damageFlash == null)
             {
@@ -544,6 +580,18 @@ namespace BattleZoneMobile
             color.a = Mathf.Clamp01(alpha);
             damageFlash.color = color;
             damageFlash.raycastTarget = false;
+            if (updateActiveState)
+            {
+                SetDamageFlashActive(color.a > 0.001f);
+            }
+        }
+
+        private void SetDamageFlashActive(bool active)
+        {
+            if (damageFlash != null && damageFlash.gameObject.activeSelf != active)
+            {
+                damageFlash.gameObject.SetActive(active);
+            }
         }
 
         private static void SetPanel(GameObject panel, bool active)

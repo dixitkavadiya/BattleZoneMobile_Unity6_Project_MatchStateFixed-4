@@ -4144,6 +4144,7 @@ namespace BattleZoneMobile
             Image damageFlash = CreateImage("DamageFlash", hudPanel.transform, Vector2.zero, new Vector2(1920f, 1080f), new Color(1f, 0f, 0f, 0f));
             damageFlash.raycastTarget = false;
             damageFlash.transform.SetAsLastSibling();
+            damageFlash.gameObject.SetActive(false);
 
             GameObject uiManagerObject = new GameObject("UIManager");
             uiManagerObject.transform.SetParent(canvasObject.transform, false);
