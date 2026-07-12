@@ -1,5 +1,17 @@
 # BattleZone Mobile Changelog
 
+## Milestone 23A - Character Animation Polish
+
+- Kept the stable ownership architecture intact: Player root movement remains controlled by `ReliablePlayerMovement` during Combat and `BattleRoyaleMatchFlow` during aircraft/drop/landing phases.
+- Kept Unity `Animator` on visual child `LowPolyOriginalHumanoid` only, with `Apply Root Motion` disabled.
+- Expanded `AC_PlayerHumanoid` parameters with `VerticalVelocity`, `Sprinting`, `Prone`, `Aiming`, `Falling`, `Fire`, `Reload`, and `Landing`.
+- Softened existing visual-child AnimatorController transition durations for smoother Idle/Walk/Run/Jump/Crouch state changes.
+- Hardened `ThirdPersonMobileController` Animator writes through cached parameter checks so missing/changed Animator parameters cannot spam Console warnings.
+- Added optional inspector toggle `Show Animator Debug`, default off, for visual-child Animator diagnostics.
+- Routed fire, reload, weapon switch, and landing animation events through `ThirdPersonMobileController` so the Unity Animator parameters and procedural child poses stay synchronized.
+- Improved child-only procedural pose blending for smoother idle, walk, sprint, jump, falling, landing, crouch, prone, aim, fire, and reload animation timing.
+- Reduced visible foot sliding by tying gait cycle and limb swing to smoothed actual movement speed.
+
 ## Stable Post-Recovery Gameplay Checkpoint
 
 - Created a stable checkpoint after the movement, Animator root override, red damage overlay, and startup drop gravity ownership recoveries.

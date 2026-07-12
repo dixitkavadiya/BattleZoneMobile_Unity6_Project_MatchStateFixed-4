@@ -27,14 +27,18 @@ namespace BattleZoneMobile
         private Vector3 weaponStart;
         private float speed;
         private float smoothedSpeed;
+        private float verticalVelocity;
         private bool grounded = true;
         private bool crouching;
         private bool prone;
         private bool sprinting;
         private bool aiming;
+        private bool falling;
         private float crouchBlend;
         private float proneBlend;
         private float aimBlend;
+        private float sprintBlend;
+        private float fallBlend;
         private float groundedBlend = 1f;
         private float cycle;
         private float fireKick;
@@ -89,24 +93,29 @@ namespace BattleZoneMobile
             crouchBlend = Mathf.Lerp(crouchBlend, crouching ? 1f : 0f, 1f - Mathf.Exp(-12f * Time.deltaTime));
             proneBlend = Mathf.Lerp(proneBlend, prone ? 1f : 0f, 1f - Mathf.Exp(-10f * Time.deltaTime));
             aimBlend = Mathf.Lerp(aimBlend, aiming ? 1f : 0f, 1f - Mathf.Exp(-14f * Time.deltaTime));
+            sprintBlend = Mathf.Lerp(sprintBlend, sprinting ? 1f : 0f, 1f - Mathf.Exp(-10f * Time.deltaTime));
+            fallBlend = Mathf.Lerp(fallBlend, falling ? 1f : 0f, 1f - Mathf.Exp(-13f * Time.deltaTime));
             groundedBlend = Mathf.Lerp(groundedBlend, grounded ? 1f : 0f, 1f - Mathf.Exp(-18f * Time.deltaTime));
             dropBlend = Mathf.Lerp(dropBlend, dropActive ? 1f : 0f, 1f - Mathf.Exp(-10f * Time.deltaTime));
             parachuteBlend = Mathf.Lerp(parachuteBlend, parachuteActive ? 1f : 0f, 1f - Mathf.Exp(-9f * Time.deltaTime));
 
-            float normalizedSpeed = Mathf.Clamp01(smoothedSpeed / 6.8f);
-            float cycleSpeed = sprinting ? runCycleSpeed : walkCycleSpeed;
-            cycle += Time.deltaTime * Mathf.Lerp(1.4f, cycleSpeed, normalizedSpeed);
+            float normalizedSpeed = Mathf.Clamp01(smoothedSpeed / 7.1f);
+            float moveCycleWeight = Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.08f, 1f, normalizedSpeed));
+            float cycleSpeed = Mathf.Lerp(walkCycleSpeed, runCycleSpeed, sprintBlend);
+            cycle += Time.deltaTime * cycleSpeed * Mathf.Lerp(0.62f, 1.08f, moveCycleWeight);
 
-            float swingAmount = Mathf.Lerp(limbSwing, runLimbSwing, sprinting ? 1f : 0f) * normalizedSpeed;
+            float swingAmount = Mathf.Lerp(limbSwing, runLimbSwing, sprintBlend) * moveCycleWeight * groundedBlend;
             float swing = Mathf.Sin(cycle) * swingAmount;
             float counterSwing = Mathf.Sin(cycle + Mathf.PI) * swingAmount;
             float footPlant = Mathf.Sin(cycle * 2f);
-            float bob = Mathf.Lerp(-0.08f, Mathf.Abs(footPlant) * normalizedSpeed * (sprinting ? 0.065f : 0.038f), groundedBlend);
+            float idleBreath = Mathf.Sin(Time.time * 1.7f) * 0.012f * (1f - moveCycleWeight) * groundedBlend;
+            float bob = (Mathf.Abs(footPlant) * moveCycleWeight * Mathf.Lerp(0.035f, 0.072f, sprintBlend) + idleBreath) * groundedBlend;
             float weaponSway = Mathf.Sin(cycle * 1.35f) * normalizedSpeed * Mathf.Lerp(0.045f, 0.015f, aimBlend);
             float crouch = Mathf.Lerp(0f, crouchDrop, crouchBlend) + Mathf.Lerp(0f, crouchDrop * 1.55f, proneBlend);
             float reloadPose = Mathf.Clamp01(reloadTimer / 0.7f);
             float switchPose = Mathf.Clamp01(switchTimer / 0.28f);
             float landingPose = Mathf.Clamp01(landingTimer / 0.55f);
+            float jumpPose = Mathf.Clamp01(Mathf.InverseLerp(0.25f, 6f, verticalVelocity)) * (1f - groundedBlend);
 
             fireKick = Mathf.MoveTowards(fireKick, 0f, 7f * Time.deltaTime);
             hitReaction = Mathf.MoveTowards(hitReaction, 0f, 8f * Time.deltaTime);
@@ -122,23 +131,31 @@ namespace BattleZoneMobile
             if (torso != null)
             {
                 torso.localPosition = Vector3.Lerp(torso.localPosition, torsoStart + new Vector3(hitReaction * 0.025f, -crouch * 0.35f, 0f), 14f * Time.deltaTime);
-                float torsoPitch = Mathf.Lerp(0f, 8f, crouchBlend) + Mathf.Lerp(0f, 28f, proneBlend) + Mathf.Lerp(0f, -2f, aimBlend) + hitReaction * 8f;
+                float torsoPitch = Mathf.Lerp(0f, 8f, crouchBlend) + Mathf.Lerp(0f, 28f, proneBlend) + Mathf.Lerp(0f, -2f, aimBlend) + jumpPose * -8f + fallBlend * 10f + landingPose * 18f + hitReaction * 8f;
                 torso.localRotation = Quaternion.Slerp(torso.localRotation, Quaternion.Euler(torsoPitch, aimBlend * 5f, -swing * 0.08f + hitReaction * 5f), 12f * Time.deltaTime);
             }
 
             if (head != null)
             {
                 head.localPosition = Vector3.Lerp(head.localPosition, headStart + new Vector3(0f, -crouch * 0.2f, 0f), 14f * Time.deltaTime);
-                head.localRotation = Quaternion.Slerp(head.localRotation, Quaternion.Euler(-4f * aimBlend + hitReaction * 4f, hitReaction * -10f, 0f), 12f * Time.deltaTime);
+                head.localRotation = Quaternion.Slerp(head.localRotation, Quaternion.Euler(-4f * aimBlend - jumpPose * 5f + fallBlend * 3f + hitReaction * 4f, hitReaction * -10f, 0f), 12f * Time.deltaTime);
             }
 
-            SetPartRotation(leftArm, Mathf.Lerp(counterSwing - reloadPose * 25f, -58f - reloadPose * 18f, aimBlend) - hitReaction * 10f, 0f, Mathf.Lerp(-reloadPose * 18f, -8f, aimBlend));
-            SetPartRotation(rightArm, Mathf.Lerp(swing - fireKick * 20f, -62f - fireKick * 16f + switchPose * 24f, aimBlend) + hitReaction * 8f, 0f, Mathf.Lerp(reloadPose * 15f, 8f, aimBlend));
+            float leftArmX = Mathf.Lerp(counterSwing - reloadPose * 25f, -58f - reloadPose * 18f, aimBlend) - hitReaction * 10f;
+            float rightArmX = Mathf.Lerp(swing - fireKick * 20f, -62f - fireKick * 16f + switchPose * 24f, aimBlend) + hitReaction * 8f;
+            leftArmX = Mathf.Lerp(leftArmX, -18f, fallBlend * 0.6f);
+            rightArmX = Mathf.Lerp(rightArmX, -18f, fallBlend * 0.6f);
+            SetPartRotation(leftArm, leftArmX, 0f, Mathf.Lerp(-reloadPose * 18f, -8f, aimBlend));
+            SetPartRotation(rightArm, rightArmX, 0f, Mathf.Lerp(reloadPose * 15f, 8f, aimBlend));
 
             float plantedLeft = Mathf.Abs(Mathf.Sin(cycle)) < 0.24f ? 0.45f : 1f;
             float plantedRight = Mathf.Abs(Mathf.Sin(cycle + Mathf.PI)) < 0.24f ? 0.45f : 1f;
-            SetPartRotation(leftLeg, Mathf.Lerp(swing * 0.85f * plantedLeft, 54f + swing * 0.18f, proneBlend), 0f, -8f * proneBlend);
-            SetPartRotation(rightLeg, Mathf.Lerp(counterSwing * 0.85f * plantedRight, 54f + counterSwing * 0.18f, proneBlend), 0f, 8f * proneBlend);
+            float leftLegX = Mathf.Lerp(swing * 0.85f * plantedLeft, 54f + swing * 0.18f, proneBlend);
+            float rightLegX = Mathf.Lerp(counterSwing * 0.85f * plantedRight, 54f + counterSwing * 0.18f, proneBlend);
+            leftLegX = Mathf.Lerp(leftLegX, Mathf.Lerp(-18f, 22f, fallBlend), Mathf.Clamp01(jumpPose + fallBlend));
+            rightLegX = Mathf.Lerp(rightLegX, Mathf.Lerp(22f, -14f, fallBlend), Mathf.Clamp01(jumpPose + fallBlend));
+            SetPartRotation(leftLeg, leftLegX, 0f, -8f * proneBlend - fallBlend * 6f);
+            SetPartRotation(rightLeg, rightLegX, 0f, 8f * proneBlend + fallBlend * 6f);
 
             if (weaponRig != null)
             {
@@ -225,16 +242,19 @@ namespace BattleZoneMobile
 
         public void SetState(float movementSpeed, bool isGrounded, bool isCrouching, bool isSprinting, bool isAiming)
         {
-            speed = movementSpeed;
-            grounded = isGrounded;
-            crouching = isCrouching;
-            sprinting = isSprinting;
-            aiming = isAiming;
+            SetState(movementSpeed, 0f, isGrounded, isCrouching, false, isSprinting, isAiming, false);
         }
 
-        public void SetProne(bool isProne)
+        public void SetState(float movementSpeed, float currentVerticalVelocity, bool isGrounded, bool isCrouching, bool isProne, bool isSprinting, bool isAiming, bool isFalling)
         {
+            speed = movementSpeed;
+            verticalVelocity = currentVerticalVelocity;
+            grounded = isGrounded;
+            crouching = isCrouching;
             prone = isProne;
+            sprinting = isSprinting;
+            aiming = isAiming;
+            falling = isFalling;
         }
 
         public void SetDropState(bool active, bool parachute, Vector3 velocity)

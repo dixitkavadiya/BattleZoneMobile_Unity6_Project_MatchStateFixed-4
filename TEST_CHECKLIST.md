@@ -1,5 +1,33 @@
 # BattleZone Mobile - Test Checklist
 
+## Milestone 23A - Character Animation Polish
+
+Automated/static checks run in this workspace:
+
+- PASS: Runtime C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+- PASS: Static audit confirms the Player root still has no Unity `Animator`.
+- PASS: Static audit confirms the Unity `Animator` is created on visual child `LowPolyOriginalHumanoid`.
+- PASS: Static audit confirms visual child `Animator.applyRootMotion = false`.
+- PASS: Static audit confirms Player-root movement ownership still routes through `ReliablePlayerMovement` for Combat and `BattleRoyaleMatchFlow` for aircraft/freefall/parachute/landing pose.
+- PASS: `AC_PlayerHumanoid` contains the Milestone 23A parameters: `Speed`, `VerticalVelocity`, `Grounded`, `Sprinting`, `Crouching`, `Prone`, `Aiming`, `Falling`, `Fire`, `Reload`, and `Landing`.
+- PASS: Animator diagnostics are optional through inspector toggle `Show Animator Debug`, default off.
+- PASS: Fire, reload, weapon switch, and landing animation events are routed through `ThirdPersonMobileController` without locking movement.
+
+Required manual Unity Play Mode checks:
+
+1. Start `BZ_Main` and press `START MATCH`.
+2. Confirm no Player-root Animator appears at runtime.
+3. Confirm `LowPolyOriginalHumanoid` has Animator and root motion disabled.
+4. Confirm idle-to-walk and walk-to-sprint transitions are smooth.
+5. Confirm normal walk/run does not visibly slide feet more than the low-poly placeholder limitation.
+6. Confirm jump, falling, and landing poses match movement timing.
+7. Confirm crouch and prone transitions blend smoothly.
+8. Confirm aiming works while standing, walking, and crouching.
+9. Confirm fire and reload play visual reactions and never permanently lock movement.
+10. Confirm WASD, mobile joystick, camera, sprint, jump, crouch, prone, aim, fire, reload, and vehicle enter/exit still work.
+11. Confirm no permanent red overlay returns.
+12. Confirm no red Console errors.
+
 ## Stable Post-Recovery Gameplay Checkpoint - 2026-07-12
 
 Automated/static checks run in this workspace:

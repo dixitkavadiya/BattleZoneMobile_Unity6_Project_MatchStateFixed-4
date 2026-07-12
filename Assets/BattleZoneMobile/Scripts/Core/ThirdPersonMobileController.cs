@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BattleZoneMobile
@@ -66,7 +67,11 @@ namespace BattleZoneMobile
         [SerializeField] private Animator animator;
         [SerializeField] private HumanoidPlaceholderAnimator humanoidAnimator;
 
+        [Header("Animator Diagnostics")]
+        [SerializeField] private bool showAnimatorDebug = false;
+
         private CharacterController characterController;
+        private readonly HashSet<int> animatorParameterHashes = new HashSet<int>();
         private readonly RaycastHit[] surfaceProbeHits = new RaycastHit[4];
         private Vector3 horizontalVelocity;
         private float verticalVelocity;
@@ -106,7 +111,22 @@ namespace BattleZoneMobile
         private Vector2 debugJoystickInput;
         private Vector2 debugFinalMoveInput;
         private float debugMoveSpeed;
+        private float debugAnimatorSpeed;
+        private float debugAnimatorVerticalVelocity;
+        private bool debugAnimatorFalling;
+        private bool animatorParameterCacheValid;
         private ReliablePlayerMovement reliableMovementOverride;
+        private static readonly int SpeedHash = Animator.StringToHash("Speed");
+        private static readonly int VerticalVelocityHash = Animator.StringToHash("VerticalVelocity");
+        private static readonly int GroundedHash = Animator.StringToHash("Grounded");
+        private static readonly int SprintingHash = Animator.StringToHash("Sprinting");
+        private static readonly int CrouchingHash = Animator.StringToHash("Crouching");
+        private static readonly int ProneHash = Animator.StringToHash("Prone");
+        private static readonly int AimingHash = Animator.StringToHash("Aiming");
+        private static readonly int FallingHash = Animator.StringToHash("Falling");
+        private static readonly int FireHash = Animator.StringToHash("Fire");
+        private static readonly int ReloadHash = Animator.StringToHash("Reload");
+        private static readonly int LandingHash = Animator.StringToHash("Landing");
 
         public bool ControlsEnabled
         {
@@ -150,6 +170,8 @@ namespace BattleZoneMobile
             {
                 animator.applyRootMotion = false;
             }
+
+            animatorParameterCacheValid = false;
         }
 
         private void Awake()
@@ -274,7 +296,30 @@ namespace BattleZoneMobile
         {
             landingRecoveryUntilTime = Time.time + Mathf.Clamp(seconds, 0f, 1.5f);
             sprintHeld = false;
+            TriggerLandingAnimation();
+        }
+
+        public void TriggerFireAnimation()
+        {
+            humanoidAnimator?.TriggerFire();
+            SetAnimatorTrigger(FireHash);
+        }
+
+        public void TriggerReloadAnimation()
+        {
+            humanoidAnimator?.TriggerReload();
+            SetAnimatorTrigger(ReloadHash);
+        }
+
+        public void TriggerWeaponSwitchAnimation()
+        {
+            humanoidAnimator?.TriggerWeaponSwitch();
+        }
+
+        public void TriggerLandingAnimation()
+        {
             humanoidAnimator?.TriggerLanding();
+            SetAnimatorTrigger(LandingHash);
         }
 
         public void SetDropCameraMode(bool active, bool parachute)
@@ -643,6 +688,7 @@ namespace BattleZoneMobile
             {
                 verticalVelocity = groundedStickVelocity;
                 horizontalVelocity *= landingVelocityRetention;
+                TriggerLandingAnimation();
             }
 
             UpdateFootsteps();
@@ -1021,17 +1067,77 @@ namespace BattleZoneMobile
         {
             Vector3 flatVelocity = new Vector3(characterController.velocity.x, 0f, characterController.velocity.z);
             animationMoveSpeed = Mathf.SmoothDamp(animationMoveSpeed, flatVelocity.magnitude, ref animationMoveSpeedVelocity, grounded ? 0.075f : 0.14f);
+            float animatorVerticalVelocity = characterController.velocity.y;
+            bool falling = !grounded && animatorVerticalVelocity < -0.35f;
+            debugAnimatorSpeed = animationMoveSpeed;
+            debugAnimatorVerticalVelocity = animatorVerticalVelocity;
+            debugAnimatorFalling = falling;
+
             if (animator != null)
             {
-                animator.SetFloat("Speed", animationMoveSpeed);
-                animator.SetBool("Grounded", grounded);
-                animator.SetBool("Crouching", crouching);
+                animator.applyRootMotion = false;
+                SetAnimatorFloat(SpeedHash, animationMoveSpeed, 0.08f);
+                SetAnimatorFloat(VerticalVelocityHash, animatorVerticalVelocity, 0.06f);
+                SetAnimatorBool(GroundedHash, grounded);
+                SetAnimatorBool(SprintingHash, sprinting);
+                SetAnimatorBool(CrouchingHash, crouching);
+                SetAnimatorBool(ProneHash, prone);
+                SetAnimatorBool(AimingHash, aimHeld);
+                SetAnimatorBool(FallingHash, falling);
             }
 
             if (humanoidAnimator != null)
             {
-                humanoidAnimator.SetState(animationMoveSpeed, grounded, crouching || prone, sprinting, aimHeld);
-                humanoidAnimator.SetProne(prone);
+                humanoidAnimator.SetState(animationMoveSpeed, animatorVerticalVelocity, grounded, crouching, prone, sprinting, aimHeld, falling);
+            }
+        }
+
+        private void CacheAnimatorParameters()
+        {
+            animatorParameterHashes.Clear();
+            if (animator != null)
+            {
+                AnimatorControllerParameter[] parameters = animator.parameters;
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    animatorParameterHashes.Add(parameters[i].nameHash);
+                }
+            }
+
+            animatorParameterCacheValid = true;
+        }
+
+        private bool HasAnimatorParameter(int parameterHash)
+        {
+            if (!animatorParameterCacheValid)
+            {
+                CacheAnimatorParameters();
+            }
+
+            return animatorParameterHashes.Contains(parameterHash);
+        }
+
+        private void SetAnimatorFloat(int parameterHash, float value, float dampTime)
+        {
+            if (animator != null && HasAnimatorParameter(parameterHash))
+            {
+                animator.SetFloat(parameterHash, value, dampTime, Time.deltaTime);
+            }
+        }
+
+        private void SetAnimatorBool(int parameterHash, bool value)
+        {
+            if (animator != null && HasAnimatorParameter(parameterHash))
+            {
+                animator.SetBool(parameterHash, value);
+            }
+        }
+
+        private void SetAnimatorTrigger(int parameterHash)
+        {
+            if (animator != null && HasAnimatorParameter(parameterHash))
+            {
+                animator.SetTrigger(parameterHash);
             }
         }
 
@@ -1047,5 +1153,27 @@ namespace BattleZoneMobile
             horizontalVelocity = Vector3.zero;
             verticalVelocity = groundedStickVelocity;
         }
+
+#if UNITY_EDITOR
+        private void OnGUI()
+        {
+            if (!showAnimatorDebug)
+            {
+                return;
+            }
+
+            GUI.color = new Color(0f, 0f, 0f, 0.72f);
+            GUI.Box(new Rect(650f, 12f, 360f, 174f), GUIContent.none);
+            GUI.color = Color.white;
+            GUILayout.BeginArea(new Rect(660f, 20f, 340f, 158f));
+            GUILayout.Label("Animator Diagnostics");
+            GUILayout.Label($"visual Animator: {(animator != null ? animator.gameObject.name : "None")}");
+            GUILayout.Label($"root motion: {(animator != null && animator.applyRootMotion ? "ON" : "OFF")}");
+            GUILayout.Label($"speed: {debugAnimatorSpeed:0.00} | vertical: {debugAnimatorVerticalVelocity:0.00}");
+            GUILayout.Label($"grounded: {grounded} | falling: {debugAnimatorFalling}");
+            GUILayout.Label($"sprint: {sprinting} | crouch: {crouching} | prone: {prone} | aim: {aimHeld}");
+            GUILayout.EndArea();
+        }
+#endif
     }
 }

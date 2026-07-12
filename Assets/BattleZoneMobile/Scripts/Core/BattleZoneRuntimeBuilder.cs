@@ -4302,9 +4302,9 @@ namespace BattleZoneMobile
             vehicleInteractor.ConfigureForRuntime(controller, weapons, uiRefs.VehiclePrompt);
             uiRefs.HudTelemetry.Configure(player.transform, mainCamera, uiRefs.CompassText, uiRefs.MinimapArrow, uiRefs.MinimapZoneRing, uiRefs.MinimapLabel, uiRefs.MinimapNextZoneRing);
             uiRefs.HudTelemetry.ConfigureNamedLocations(runtimeLocationNames.ToArray(), runtimeLocationPositions.ToArray(), uiRefs.MinimapLocation);
-            weapons.onFired.AddListener(placeholderAnimator.TriggerFire);
-            weapons.onReloadStarted.AddListener(placeholderAnimator.TriggerReload);
-            weapons.onWeaponSwitchStarted.AddListener(placeholderAnimator.TriggerWeaponSwitch);
+            weapons.onFired.AddListener(controller.TriggerFireAnimation);
+            weapons.onReloadStarted.AddListener(controller.TriggerReloadAnimation);
+            weapons.onWeaponSwitchStarted.AddListener(controller.TriggerWeaponSwitchAnimation);
             health.onDamageTaken.AddListener((amount, hitPoint, hitNormal, source) => placeholderAnimator.TriggerHit(amount));
             health.onDied.AddListener(_ => placeholderAnimator.TriggerDeath());
 

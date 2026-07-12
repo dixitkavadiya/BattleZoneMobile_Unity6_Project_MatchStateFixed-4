@@ -1,5 +1,39 @@
 # BattleZone Mobile - Regression Report
 
+## Milestone 23A Character Animation Polish - 2026-07-12
+
+Scope:
+
+- Current project only: `BattleZoneMobile_Unity6_Project_MatchStateFixed-4`.
+- Character animation polish only; no movement rewrite.
+- Stable fixes preserved: WASD/mobile movement, visual-child Animator placement, direct-damage-only red overlay, and startup drop gravity ownership.
+
+Regression audit results:
+
+- PASS: Unity `Animator` remains on `LowPolyOriginalHumanoid`, not Player root.
+- PASS: `Animator.applyRootMotion` remains false in runtime builder and is reinforced by `ThirdPersonMobileController.SetUnityAnimator`.
+- PASS: Player root transform remains controlled only by `ReliablePlayerMovement` during Combat and `BattleRoyaleMatchFlow` during aircraft/freefall/parachute/landing phases.
+- PASS: `ThirdPersonMobileController` writes Animator parameters through cached existence checks, preventing missing-parameter Console warnings.
+- PASS: `HumanoidPlaceholderAnimator` animates only child body part local transforms under the visual child.
+- PASS: Fire, reload, weapon switch, and landing animation events are synchronized through `ThirdPersonMobileController`.
+- PASS: `AC_PlayerHumanoid` includes the Milestone 23A parameter set.
+- PASS: Runtime C# compile check completed with zero errors and zero warnings.
+
+Transition summary:
+
+- Idle, walk, and sprint blend from smoothed actual CharacterController horizontal speed.
+- Existing visual-child AnimatorController transitions were softened to `0.12s`.
+- Jump and falling pose blends use `VerticalVelocity`, `Grounded`, and `Falling`.
+- Landing is triggered when falling returns to grounded and when match-flow landing recovery runs.
+- Crouch and prone use separate smoothed blend channels so stance changes do not snap.
+- Aim blends over standing, walking, and crouching poses.
+- Fire and reload are short additive child-pose reactions and do not disable movement.
+
+Unity Editor verification:
+
+- NOT RUN: Unity batch mode remains blocked by Unity licensing startup timeout in this environment.
+- Manual Play Mode validation is listed in `TEST_CHECKLIST.md`.
+
 ## Stable Post-Recovery Gameplay Checkpoint - 2026-07-12
 
 Checkpoint commit target:
