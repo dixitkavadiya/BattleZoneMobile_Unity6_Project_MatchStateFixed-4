@@ -60,6 +60,7 @@ namespace BattleZoneMobile
         public Vector3 LastRouteStart => lastRouteStart;
         public Vector3 LastRouteEnd => lastRouteEnd;
         public bool DebugLocalPlayerHasLanded => localPlayerHasLanded;
+        public bool MatchFlowOwnsLocalPlayerPose => !localPlayerHasLanded && IsMatchFlowPosePhase(CurrentPhase);
 
         public void ConfigureForRuntime(
             Transform playerTransform,
@@ -349,6 +350,8 @@ namespace BattleZoneMobile
                 reliableMovement.enabled = true;
             }
 
+            reliableMovement?.ResetAfterMatchFlowPose();
+
             CharacterController characterController = player != null ? player.GetComponent<CharacterController>() : null;
             if (characterController != null && !characterController.enabled)
             {
@@ -375,6 +378,16 @@ namespace BattleZoneMobile
             }
 
             return reliablePlayerMovement;
+        }
+
+        private static bool IsMatchFlowPosePhase(string phase)
+        {
+            return phase == "Lobby" ||
+                phase == "Waiting" ||
+                phase == "Aircraft" ||
+                phase == "Freefall" ||
+                phase == "Parachute" ||
+                phase == "Landing";
         }
 
         private Vector3 BuildSteerDirection(Quaternion routeRotation, Vector3 fallbackForward)

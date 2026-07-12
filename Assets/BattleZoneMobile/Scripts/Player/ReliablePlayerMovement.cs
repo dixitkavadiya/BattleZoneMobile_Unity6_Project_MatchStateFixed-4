@@ -56,6 +56,9 @@ namespace BattleZoneMobile
         private int lastEmergencyMoveFrame = -1;
         private ThirdPersonMobileController oldMovementController;
         private BattleRoyaleMatchFlow matchFlow;
+        private bool gravitySuppressed;
+        private bool wasGravitySuppressed;
+        private string poseOwner = "ReliableGround";
 
         public Vector2 KeyboardInput => keyboardInput;
         public Vector2 JoystickInput => joystickInput;
@@ -69,6 +72,9 @@ namespace BattleZoneMobile
         public bool IsCrouching => crouching;
         public bool ControllerReady => enabled && characterController != null && characterController.enabled;
         public bool OwnsGroundMovement => enabled;
+        public float DebugVerticalVelocity => verticalVelocity;
+        public bool DebugGravitySuppressed => gravitySuppressed;
+        public string DebugPoseOwner => poseOwner;
 
         public void ConfigureForRuntime(CharacterController controller, Camera camera, FloatingJoystick joystick)
         {
@@ -110,12 +116,26 @@ namespace BattleZoneMobile
                 characterController.enabled = true;
             }
 
-            verticalVelocity = groundedStickVelocity;
+            verticalVelocity = ShouldSuppressGroundMovementForMatchFlow() ? 0f : groundedStickVelocity;
             finalMoveVector = Vector3.zero;
             positionBeforeMove = transform.position;
             positionAfterMove = transform.position;
             positionLateUpdate = transform.position;
             characterControllerVelocity = Vector3.zero;
+        }
+
+        public void ResetAfterMatchFlowPose()
+        {
+            verticalVelocity = groundedStickVelocity;
+            jumpQueued = false;
+            finalMoveVector = Vector3.zero;
+            positionBeforeMove = transform.position;
+            positionAfterMove = transform.position;
+            positionLateUpdate = transform.position;
+            characterControllerVelocity = Vector3.zero;
+            gravitySuppressed = false;
+            wasGravitySuppressed = false;
+            poseOwner = "ReliableGround";
         }
 
         private void Awake()
@@ -139,9 +159,23 @@ namespace BattleZoneMobile
         {
             RepairReferences();
             ReadInput();
-            if (Input.GetKeyDown(KeyCode.F8))
+            gravitySuppressed = ShouldSuppressGroundMovementForMatchFlow();
+            poseOwner = gravitySuppressed ? "MatchFlowPose" : "ReliableGround";
+            if (!gravitySuppressed && Input.GetKeyDown(KeyCode.F8))
             {
                 EmergencyMoveForward();
+            }
+
+            if (gravitySuppressed)
+            {
+                SuppressGroundMovementForMatchFlowPose();
+                wasGravitySuppressed = true;
+                return;
+            }
+
+            if (wasGravitySuppressed)
+            {
+                ResetAfterMatchFlowPose();
             }
 
             UpdateCrouchHeight();
@@ -189,6 +223,27 @@ namespace BattleZoneMobile
             }
 
             SetOldControllerGroundMovementBypass(enabled);
+        }
+
+        private bool ShouldSuppressGroundMovementForMatchFlow()
+        {
+            if (matchFlow == null)
+            {
+                return false;
+            }
+
+            return matchFlow.MatchFlowOwnsLocalPlayerPose;
+        }
+
+        private void SuppressGroundMovementForMatchFlowPose()
+        {
+            verticalVelocity = 0f;
+            jumpQueued = false;
+            finalMoveVector = Vector3.zero;
+            positionBeforeMove = transform.position;
+            positionAfterMove = transform.position;
+            characterControllerVelocity = Vector3.zero;
+            grounded = characterController != null && characterController.enabled && characterController.isGrounded;
         }
 
         private void SetOldControllerGroundMovementBypass(bool active)
@@ -441,6 +496,7 @@ namespace BattleZoneMobile
             bool oldGroundBypassed = oldMovementController != null && oldMovementController.DebugExternalGroundMovementDriverActive;
             GUILayout.Label("Reliable Player Movement");
             GUILayout.Label($"match phase: {phase} | local landed: {landed}");
+            GUILayout.Label($"pose owner: {poseOwner} | gravity suppressed: {gravitySuppressed} | vertical velocity: {verticalVelocity:0.00}");
             GUILayout.Label($"reliable owns ground: {OwnsGroundMovement} | old enabled: {oldControllerEnabled} | old ground bypassed: {oldGroundBypassed}");
             GUILayout.Label($"keyboard input: {keyboardInput.x:0.00}, {keyboardInput.y:0.00}");
             GUILayout.Label($"joystick input: {joystickInput.x:0.00}, {joystickInput.y:0.00}");
