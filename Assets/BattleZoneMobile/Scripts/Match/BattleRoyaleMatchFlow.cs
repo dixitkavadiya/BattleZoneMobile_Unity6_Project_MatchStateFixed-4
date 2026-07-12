@@ -59,6 +59,7 @@ namespace BattleZoneMobile
         public bool ConsumesJumpButton => CurrentPhase == "Aircraft" || CurrentPhase == "Freefall" || CurrentPhase == "Parachute";
         public Vector3 LastRouteStart => lastRouteStart;
         public Vector3 LastRouteEnd => lastRouteEnd;
+        public bool DebugLocalPlayerHasLanded => localPlayerHasLanded;
 
         public void ConfigureForRuntime(
             Transform playerTransform,
@@ -154,10 +155,11 @@ namespace BattleZoneMobile
             SetFlightPathActive(false);
             uiManager?.SetFlightPathPreview(start, end, false);
             SetVisualActive(planeVisual, false);
-            controller.SetExternalMotionLock(false);
-            controller.ControlsEnabled = true;
             localPlayerHasLanded = true;
             CurrentPhase = "Combat";
+            controller.SetExternalMotionLock(false);
+            controller.ControlsEnabled = true;
+            EnsureReliableGroundMovementEnabled();
             uiManager?.SetMatchPhase("Combat", "Loot, rotate, survive");
             uiManager?.SetMatchAnnouncement("Combat live");
             SpawnAirdrop(FindGroundPoint(player.position + new Vector3(Random.Range(-42f, 42f), 0f, Random.Range(38f, 66f))));
@@ -312,7 +314,7 @@ namespace BattleZoneMobile
                 yield return null;
             }
 
-            localPlayerHasLanded = true;
+            CurrentPhase = "Landing";
             SetVisualActive(parachuteVisual, false);
             controller.SetDropCameraMode(false, false);
             controller.SetDropAnimationState(false, false, Vector3.zero);
@@ -336,13 +338,22 @@ namespace BattleZoneMobile
 
         private bool IsLocalPlayerPoseProtected()
         {
-            if (localPlayerHasLanded)
+            return localPlayerHasLanded || CurrentPhase == "Combat";
+        }
+
+        private void EnsureReliableGroundMovementEnabled()
+        {
+            ReliablePlayerMovement reliableMovement = ResolveReliablePlayerMovement();
+            if (reliableMovement != null && !reliableMovement.enabled)
             {
-                return true;
+                reliableMovement.enabled = true;
             }
 
-            ReliablePlayerMovement reliableMovement = ResolveReliablePlayerMovement();
-            return reliableMovement != null && reliableMovement.enabled;
+            CharacterController characterController = player != null ? player.GetComponent<CharacterController>() : null;
+            if (characterController != null && !characterController.enabled)
+            {
+                characterController.enabled = true;
+            }
         }
 
         private ReliablePlayerMovement ResolveReliablePlayerMovement()

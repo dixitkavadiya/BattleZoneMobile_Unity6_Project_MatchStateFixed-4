@@ -55,6 +55,7 @@ namespace BattleZoneMobile
         private int lastLatePositionOverrideFrame = -1;
         private int lastEmergencyMoveFrame = -1;
         private ThirdPersonMobileController oldMovementController;
+        private BattleRoyaleMatchFlow matchFlow;
 
         public Vector2 KeyboardInput => keyboardInput;
         public Vector2 JoystickInput => joystickInput;
@@ -67,6 +68,7 @@ namespace BattleZoneMobile
         public bool IsGrounded => grounded;
         public bool IsCrouching => crouching;
         public bool ControllerReady => enabled && characterController != null && characterController.enabled;
+        public bool OwnsGroundMovement => enabled;
 
         public void ConfigureForRuntime(CharacterController controller, Camera camera, FloatingJoystick joystick)
         {
@@ -125,6 +127,12 @@ namespace BattleZoneMobile
         private void OnEnable()
         {
             RepairReferences();
+            SetOldControllerGroundMovementBypass(true);
+        }
+
+        private void OnDisable()
+        {
+            SetOldControllerGroundMovementBypass(false);
         }
 
         private void Update()
@@ -175,19 +183,24 @@ namespace BattleZoneMobile
                 movementJoystick = Object.FindAnyObjectByType<FloatingJoystick>(FindObjectsInactive.Include);
             }
 
-            DisableConflictingMovementController();
+            if (matchFlow == null)
+            {
+                matchFlow = Object.FindAnyObjectByType<BattleRoyaleMatchFlow>(FindObjectsInactive.Include);
+            }
+
+            SetOldControllerGroundMovementBypass(enabled);
         }
 
-        private void DisableConflictingMovementController()
+        private void SetOldControllerGroundMovementBypass(bool active)
         {
             if (oldMovementController == null)
             {
                 oldMovementController = GetComponent<ThirdPersonMobileController>();
             }
 
-            if (oldMovementController != null && oldMovementController.enabled)
+            if (oldMovementController != null)
             {
-                oldMovementController.enabled = false;
+                oldMovementController.SetExternalGroundMovementDriver(active);
             }
         }
 
@@ -419,10 +432,16 @@ namespace BattleZoneMobile
             }
 
             GUI.color = new Color(0f, 0f, 0f, 0.72f);
-            GUI.Box(new Rect(12f, 12f, 560f, 260f), GUIContent.none);
+            GUI.Box(new Rect(12f, 12f, 620f, 310f), GUIContent.none);
             GUI.color = Color.white;
-            GUILayout.BeginArea(new Rect(20f, 18f, 544f, 250f));
+            GUILayout.BeginArea(new Rect(20f, 18f, 604f, 300f));
+            string phase = matchFlow != null ? matchFlow.CurrentPhase : "None";
+            bool landed = matchFlow != null && matchFlow.DebugLocalPlayerHasLanded;
+            bool oldControllerEnabled = oldMovementController != null && oldMovementController.enabled;
+            bool oldGroundBypassed = oldMovementController != null && oldMovementController.DebugExternalGroundMovementDriverActive;
             GUILayout.Label("Reliable Player Movement");
+            GUILayout.Label($"match phase: {phase} | local landed: {landed}");
+            GUILayout.Label($"reliable owns ground: {OwnsGroundMovement} | old enabled: {oldControllerEnabled} | old ground bypassed: {oldGroundBypassed}");
             GUILayout.Label($"keyboard input: {keyboardInput.x:0.00}, {keyboardInput.y:0.00}");
             GUILayout.Label($"joystick input: {joystickInput.x:0.00}, {joystickInput.y:0.00}");
             GUILayout.Label($"final movement vector: {finalMoveVector.x:0.00}, {finalMoveVector.y:0.00}, {finalMoveVector.z:0.00}");

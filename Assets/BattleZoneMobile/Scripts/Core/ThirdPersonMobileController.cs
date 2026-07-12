@@ -92,6 +92,7 @@ namespace BattleZoneMobile
         private float coyoteTimer;
         private bool controlsEnabled = true;
         private bool externalMotionLock;
+        [SerializeField] private bool externalGroundMovementDriverActive;
         private bool dropCameraActive;
         private bool parachuteCameraActive;
         private bool vehicleMode;
@@ -126,6 +127,7 @@ namespace BattleZoneMobile
         public bool DebugControlsEnabled => controlsEnabled && !externalMotionLock && !vehicleMode;
         public bool DebugHasJoystick => movementJoystick != null;
         public bool DebugHasCharacterController => characterController != null && characterController.enabled;
+        public bool DebugExternalGroundMovementDriverActive => externalGroundMovementDriverActive;
 
         public void ConfigureForRuntime(FloatingJoystick joystick, MobileLookArea lookInput, Camera camera, Transform pivot)
         {
@@ -181,7 +183,7 @@ namespace BattleZoneMobile
 
             if (!controlsEnabled)
             {
-                if (!externalMotionLock)
+                if (!externalMotionLock && !externalGroundMovementDriverActive)
                 {
                     ApplyGravityOnly();
                 }
@@ -197,8 +199,16 @@ namespace BattleZoneMobile
             }
 
             ReadLook();
-            Move();
-            UpdateCrouch();
+            if (externalGroundMovementDriverActive)
+            {
+                UpdateExternalGroundMovementDriverState();
+            }
+            else
+            {
+                Move();
+                UpdateCrouch();
+            }
+
             UpdateCamera();
             UpdateAnimator();
         }
@@ -324,6 +334,21 @@ namespace BattleZoneMobile
             rightShoulder = !rightShoulder;
         }
 
+        public void SetExternalGroundMovementDriver(bool active)
+        {
+            externalGroundMovementDriverActive = active;
+            if (externalGroundMovementDriverActive)
+            {
+                horizontalVelocity = Vector3.zero;
+                verticalVelocity = groundedStickVelocity;
+                sprinting = false;
+                jumpQueued = false;
+                jumpBufferTimer = 0f;
+                coyoteTimer = 0f;
+                footstepTimer = 0f;
+            }
+        }
+
         public void SetExternalMotionLock(bool locked)
         {
             externalMotionLock = locked;
@@ -361,11 +386,6 @@ namespace BattleZoneMobile
 
         public void SetExternalPose(Vector3 position, Quaternion rotation, bool preserveCameraYaw)
         {
-            if (TryGetReliableMovementOverride(out _))
-            {
-                return;
-            }
-
             transform.SetPositionAndRotation(position, rotation);
             if (!preserveCameraYaw)
             {
@@ -394,16 +414,18 @@ namespace BattleZoneMobile
 
         public void ResetController(Vector3 position, Quaternion rotation)
         {
-            if (TryGetReliableMovementOverride(out ReliablePlayerMovement reliableMovement))
+            bool reliablePoseApplied = TryGetReliableMovementOverride(out ReliablePlayerMovement reliableMovement);
+            if (reliablePoseApplied)
             {
                 reliableMovement.SetAuthoritativePose(position, rotation);
-                return;
             }
-
-            characterController.enabled = false;
-            transform.SetParent(null, true);
-            transform.SetPositionAndRotation(position, rotation);
-            characterController.enabled = true;
+            else
+            {
+                characterController.enabled = false;
+                transform.SetParent(null, true);
+                transform.SetPositionAndRotation(position, rotation);
+                characterController.enabled = true;
+            }
 
             yaw = rotation.eulerAngles.y;
             pitch = 12f;
@@ -616,6 +638,39 @@ namespace BattleZoneMobile
 
             UpdateFootsteps();
             RotateCharacter(desiredDirection);
+        }
+
+        private void UpdateExternalGroundMovementDriverState()
+        {
+            if (characterController == null)
+            {
+                return;
+            }
+
+            if (!characterController.enabled && !vehicleMode)
+            {
+                characterController.enabled = true;
+            }
+
+            Vector2 input = ReadMovementInput();
+            bool keyboardSprint = keyboardAndMouseFallback && ReadKey(KeyCode.LeftShift);
+            aimHeld = aimButtonHeld || (keyboardAndMouseFallback && ReadMouseButton(1));
+            sprinting = false;
+            horizontalVelocity = Vector3.zero;
+            verticalVelocity = groundedStickVelocity;
+            jumpQueued = false;
+            jumpHeld = false;
+            jumpHoldTimer = 0f;
+            jumpBufferTimer = 0f;
+            coyoteTimer = 0f;
+            footstepTimer = 0f;
+            grounded = characterController.isGrounded;
+            debugMoveSpeed = ResolveTargetMoveSpeed(input, keyboardSprint);
+
+            if (keyboardAndMouseFallback && ReadKeyDown(KeyCode.V))
+            {
+                ToggleShoulder();
+            }
         }
 
         private Vector2 ReadMovementInput()
