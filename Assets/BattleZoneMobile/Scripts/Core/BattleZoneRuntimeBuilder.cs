@@ -4295,7 +4295,9 @@ namespace BattleZoneMobile
             controller.SetHumanoidAnimator(placeholderAnimator);
             controller.SetCameraCollisionMask(~(1 << playerLayer));
             reliableMovement.ConfigureForRuntime(characterController, mainCamera, uiRefs.Joystick);
-            controller.enabled = false;
+            controller.enabled = true;
+            reliableMovement.enabled = true;
+            controller.SetExternalGroundMovementDriver(reliableMovement.OwnsGroundMovement);
             WeaponModelRig weaponModelRig = placeholderAnimator.GetComponentInChildren<WeaponModelRig>();
             weapons.ConfigureForRuntime(mainCamera, muzzleObject.transform, controller, weaponModelRig, damageNumberPrefab, hitEffectPrefab, combatMask, pistol, rifle, smg, sniper, shotgun);
             inventory.ConfigureForRuntime(weapons, health);

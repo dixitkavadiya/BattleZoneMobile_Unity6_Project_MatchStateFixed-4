@@ -308,7 +308,14 @@ namespace BattleZoneMobile
 
             if (playerController != null)
             {
-                playerController.enabled = !HasReliableMovement();
+                playerController.enabled = true;
+                ReliablePlayerMovement reliableMovement = playerController.GetComponent<ReliablePlayerMovement>();
+                if (reliableMovement != null && !reliableMovement.enabled)
+                {
+                    reliableMovement.enabled = true;
+                }
+
+                playerController.SetExternalGroundMovementDriver(reliableMovement != null && reliableMovement.OwnsGroundMovement);
                 CharacterController characterController = playerController.GetComponent<CharacterController>();
                 if (characterController != null)
                 {
@@ -538,7 +545,14 @@ namespace BattleZoneMobile
             Time.timeScale = 1f;
             if (playerController != null)
             {
-                playerController.enabled = !HasReliableMovement();
+                playerController.enabled = true;
+                ReliablePlayerMovement reliableMovement = playerController.GetComponent<ReliablePlayerMovement>();
+                if (reliableMovement != null && !reliableMovement.enabled)
+                {
+                    reliableMovement.enabled = true;
+                }
+
+                playerController.SetExternalGroundMovementDriver(reliableMovement != null && reliableMovement.OwnsGroundMovement);
                 CharacterController characterController = playerController.GetComponent<CharacterController>();
                 if (characterController != null)
                 {
