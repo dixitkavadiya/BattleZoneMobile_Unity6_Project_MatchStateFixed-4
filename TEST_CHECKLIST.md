@@ -1,5 +1,38 @@
 # BattleZone Mobile - Test Checklist
 
+## Milestone 24A - AAA Combat Foundation
+
+Automated/static checks run in this workspace:
+
+- PASS: Runtime C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+- PASS: New combat framework is additive and does not replace the active `WeaponController`.
+- PASS: `ReliablePlayerMovement`, `ThirdPersonMobileController`, `BattleRoyaleMatchFlow`, and red overlay scripts were not modified.
+- PASS: `AdvancedWeaponData` is a ScriptableObject data contract for weapon stats, recoil, spread, attachments, audio, animation hooks, body multipliers, and surface impacts.
+- PASS: Assault Rifle, SMG, Sniper, DMR, Shotgun, Pistol, Melee, and Throwable components all inherit from `ModularWeaponBase`.
+- PASS: Raycast, projectile, melee, and throwable delivery paths exist in `ModularWeaponBase`.
+- PASS: `CombatProjectile` supports pooled projectile movement and raycast segment hit detection.
+- PASS: `CombatHitbox` supports Head, Neck, Chest, Arm, and Leg metadata.
+- PASS: `CombatSurface` supports Metal, Stone, Wood, Glass, Sand, Water, Grass, and fallback surface resolution.
+- PASS: `CombatRecoilApplicator` separates camera, weapon, and crosshair recoil channels.
+- PASS: `CombatAnimationEventBridge` provides future animation-event hooks without root motion.
+- PASS: `CombatDebugWindow` defaults OFF.
+- PASS: Runtime builder still creates the Animator on `LowPolyOriginalHumanoid`, and the Player root remains Animator-free.
+
+Required manual Unity Play Mode checks:
+
+1. Open `Assets/BattleZoneMobile/Scenes/BZ_Main.unity`.
+2. Press Play and start a match.
+3. Confirm the aircraft, freefall, parachute, and landing sequence still works.
+4. Confirm WASD and mobile joystick movement work after landing.
+5. Confirm sprint, jump, crouch, prone, aim, fire, reload, and weapon switching still work.
+6. Confirm the camera follows and rotates normally.
+7. Confirm the visual child `LowPolyOriginalHumanoid` still has the Animator and `Apply Root Motion` is off.
+8. Confirm `CombatDebugWindow` remains hidden during normal gameplay.
+9. Optional: enable `CombatDebugWindow.Show Combat Debug Window` in the inspector and confirm it displays weapon diagnostics.
+10. Confirm firing the current legacy weapons still produces muzzle flash, tracer, recoil, hit marker, and damage number behavior.
+11. Confirm no permanent red overlay appears during normal gameplay.
+12. Confirm no red Console errors and no repeated BattleZone script warnings.
+
 ## Milestone 23A - Character Animation Polish
 
 Automated/static checks run in this workspace:

@@ -1,5 +1,40 @@
 # BattleZone Mobile - Regression Report
 
+## Milestone 24A AAA Combat Foundation - 2026-07-12
+
+Scope:
+
+- Current project only: `BattleZoneMobile_Unity6_Project_MatchStateFixed-4`.
+- Combat foundation only; no movement, joystick, Animator ownership, aircraft, landing, damage overlay, camera, vehicle, bot, or match-flow rewrites.
+- The current active `WeaponController` remains the live gameplay weapon path for this checkpoint.
+
+Regression audit results:
+
+- PASS: `ReliablePlayerMovement` was not modified and remains Combat ground movement owner.
+- PASS: `ThirdPersonMobileController` was not modified and remains enabled for camera, animation, drop, and UI support.
+- PASS: `BattleRoyaleMatchFlow` was not modified and remains aircraft/freefall/parachute/landing pose owner.
+- PASS: Player root Animator placement was not changed; Unity `Animator` remains on visual child `LowPolyOriginalHumanoid`.
+- PASS: `Apply Root Motion` remains disabled on the visual child Animator.
+- PASS: Red damage overlay code was not modified.
+- PASS: New combat foundation components are passive by default and do not replace the current weapon controller.
+- PASS: `CombatDebugWindow` is present but default OFF.
+- PASS: Current visual humanoid body parts are tagged with `CombatHitbox` metadata without animating or moving the Player root.
+- PASS: Runtime C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+
+Combat foundation summary:
+
+- `AdvancedWeaponData` stores weapon stats, recoil, spread, attachments, audio clips, animation hook names, body-zone multipliers, and surface impact profiles as ScriptableObject data.
+- `ModularWeaponBase` provides switch-ready raycast, projectile, melee, and throwable support.
+- `AssaultRifleWeapon`, `SMGWeapon`, `SniperWeapon`, `DMRWeapon`, `ShotgunWeapon`, `PistolWeapon`, `MeleeWeapon`, and `ThrowableWeapon` inherit from the common base class.
+- `CombatProjectile` uses pooling and per-frame raycast segments for projectile support.
+- `CombatRecoilApplicator` separates camera recoil, weapon recoil, and crosshair recoil.
+- `CombatSurface`, `CombatHitbox`, and `CombatImpactUtility` provide surface-aware and body-zone-aware hit detection for future weapon migration.
+
+Unity Editor verification:
+
+- NOT RUN: Unity batch mode remains blocked by Unity licensing startup timeout in this environment.
+- Manual Play Mode validation is listed in `TEST_CHECKLIST.md`.
+
 ## Milestone 23A Character Animation Polish - 2026-07-12
 
 Scope:

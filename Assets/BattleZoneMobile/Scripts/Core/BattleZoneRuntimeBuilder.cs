@@ -4270,11 +4270,14 @@ namespace BattleZoneMobile
             ThirdPersonMobileController controller = player.AddComponent<ThirdPersonMobileController>();
             ReliablePlayerMovement reliableMovement = player.AddComponent<ReliablePlayerMovement>();
             WeaponController weapons = player.AddComponent<WeaponController>();
+            CombatRecoilApplicator combatRecoil = player.AddComponent<CombatRecoilApplicator>();
+            CombatDebugWindow combatDebug = player.AddComponent<CombatDebugWindow>();
             PlayerInventory inventory = player.AddComponent<PlayerInventory>();
             LootPickupInteractor pickup = player.AddComponent<LootPickupInteractor>();
             VehicleInteractor vehicleInteractor = player.AddComponent<VehicleInteractor>();
-            HumanoidPlaceholderAnimator placeholderAnimator = BuildHumanoidVisual(player.transform, muzzleObject.transform);
+            HumanoidPlaceholderAnimator placeholderAnimator = BuildHumanoidVisual(player.transform, muzzleObject.transform, health);
             Animator visualAnimator = placeholderAnimator.GetComponent<Animator>();
+            CombatAnimationEventBridge animationEventBridge = visualAnimator != null ? visualAnimator.gameObject.AddComponent<CombatAnimationEventBridge>() : null;
 
             WorldDamageNumber damageNumberPrefab = BuildDamageNumberTemplate();
             ParticleSystem muzzleFlashPrefab = BuildMuzzleFlashTemplate();
@@ -4297,6 +4300,9 @@ namespace BattleZoneMobile
             controller.SetExternalGroundMovementDriver(reliableMovement.OwnsGroundMovement);
             WeaponModelRig weaponModelRig = placeholderAnimator.GetComponentInChildren<WeaponModelRig>();
             weapons.ConfigureForRuntime(mainCamera, muzzleObject.transform, controller, weaponModelRig, damageNumberPrefab, hitEffectPrefab, combatMask, pistol, rifle, smg, sniper, shotgun);
+            combatRecoil.Configure(controller, null, uiRefs.UIManager);
+            combatDebug.Configure(weapons, null, combatRecoil, health);
+            animationEventBridge?.Configure(weapons, null);
             inventory.ConfigureForRuntime(weapons, health);
             pickup.ConfigureForRuntime(mainCamera, inventory, uiRefs.PickupPrompt, lootMask);
             vehicleInteractor.ConfigureForRuntime(controller, weapons, uiRefs.VehiclePrompt);
@@ -4323,7 +4329,7 @@ namespace BattleZoneMobile
             };
         }
 
-        private HumanoidPlaceholderAnimator BuildHumanoidVisual(Transform playerRoot, Transform muzzlePoint)
+        private HumanoidPlaceholderAnimator BuildHumanoidVisual(Transform playerRoot, Transform muzzlePoint, Health health)
         {
             GameObject visualRoot = new GameObject("LowPolyOriginalHumanoid");
             visualRoot.transform.SetParent(playerRoot, false);
@@ -4375,6 +4381,14 @@ namespace BattleZoneMobile
             muzzlePoint.SetParent(weaponRig.transform, false);
             muzzlePoint.localPosition = new Vector3(0f, 0f, 0.78f);
 
+            ConfigureCombatHitbox(torso, CombatHitZone.Chest, health);
+            ConfigureCombatHitbox(chest, CombatHitZone.Chest, health);
+            ConfigureCombatHitbox(head, CombatHitZone.Head, health);
+            ConfigureCombatHitbox(leftArm, CombatHitZone.Arm, health);
+            ConfigureCombatHitbox(rightArm, CombatHitZone.Arm, health);
+            ConfigureCombatHitbox(leftLeg, CombatHitZone.Leg, health);
+            ConfigureCombatHitbox(rightLeg, CombatHitZone.Leg, health);
+
             HumanoidPlaceholderAnimator placeholder = visualRoot.AddComponent<HumanoidPlaceholderAnimator>();
             placeholder.Configure(hips.transform, torso, head, leftArm, rightArm, leftLeg, rightLeg, weaponRig.transform);
             Animator visualAnimator = visualRoot.AddComponent<Animator>();
@@ -4389,6 +4403,22 @@ namespace BattleZoneMobile
             chest.name = "ChestPlate";
             visor.name = "Visor";
             return placeholder;
+        }
+
+        private static void ConfigureCombatHitbox(Transform target, CombatHitZone zone, Health owner)
+        {
+            if (target == null)
+            {
+                return;
+            }
+
+            CombatHitbox hitbox = target.GetComponent<CombatHitbox>();
+            if (hitbox == null)
+            {
+                hitbox = target.gameObject.AddComponent<CombatHitbox>();
+            }
+
+            hitbox.Configure(zone, owner);
         }
 
         private WeaponModelEntry CreateWeaponModel(Transform parent, WeaponSlot slot, string objectName, float length, float height, float width, bool optic)

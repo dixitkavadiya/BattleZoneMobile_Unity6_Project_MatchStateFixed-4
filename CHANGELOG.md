@@ -1,5 +1,20 @@
 # BattleZone Mobile Changelog
 
+## Milestone 24A - AAA Combat Foundation
+
+- Added a data-driven combat foundation through `AdvancedWeaponData` ScriptableObjects for damage, fire rate, reload time, magazine size, range, bullet speed, recoil, spread, attachments, modular audio, animation hooks, body-zone multipliers, and surface impact profiles.
+- Added shared combat enums for weapon delivery, ammo class, hit zones, surface types, and direct combat damage sources.
+- Added `ModularWeaponBase` plus concrete weapon components for Assault Rifle, SMG, Sniper, DMR, Shotgun, Pistol, Melee, and Throwable weapons.
+- Added switch-ready raycast, projectile, melee, and throwable delivery support without replacing the stable active `WeaponController`.
+- Added pooled `CombatProjectile` support with between-frame raycast collision, owner-collider filtering, hit damage, and surface impact routing.
+- Added `CombatHitbox` body-zone metadata and tagged the current visual child body parts for Head, Chest, Arm, and Leg detection.
+- Added `CombatSurface` and `CombatImpactUtility` for Metal, Stone, Wood, Glass, Sand, Water, Grass, and fallback impact resolution.
+- Added `CombatRecoilApplicator` with separate camera recoil, weapon recoil, and crosshair recoil channels.
+- Added `CombatAnimationEventBridge` for future animation events while preserving visual-child Animator ownership and root-motion-off behavior.
+- Added a default-off `CombatDebugWindow` that can show legacy weapon, modular weapon, delivery, ammo, recoil bloom, and health diagnostics.
+- Preserved current stable movement, joystick, camera, Animator placement, aircraft/freefall/parachute/landing ownership, damage overlay behavior, and active match flow.
+- Runtime C# compile check completed with Unity 6.5 Roslyn references with zero errors and zero warnings.
+
 ## Milestone 23A - Character Animation Polish
 
 - Kept the stable ownership architecture intact: Player root movement remains controlled by `ReliablePlayerMovement` during Combat and `BattleRoyaleMatchFlow` during aircraft/drop/landing phases.
