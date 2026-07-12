@@ -135,6 +135,7 @@ namespace BattleZoneMobile
         }
 
         public bool IsAiming => aimHeld;
+        public bool IsCrouching => crouching;
         public bool IsProne => prone;
         public bool IsInVehicle => vehicleMode;
         public bool IsExternalMotionLocked => externalMotionLock;

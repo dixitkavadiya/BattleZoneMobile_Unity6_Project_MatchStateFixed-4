@@ -117,7 +117,8 @@ namespace BattleZoneMobile
 
             Camera mainCamera = BuildCamera();
             RuntimeUIRefs uiRefs = BuildUI();
-            PlayerRefs playerRefs = BuildPlayer(mainCamera, uiRefs);
+            AdvancedWeaponData[] weaponRoster = CombatWeaponRoster.LoadAll();
+            PlayerRefs playerRefs = BuildPlayer(mainCamera, uiRefs, weaponRoster);
             BotAI botPrefab = BuildBotTemplate();
             LootItem[] lootPrefabs = BuildLootTemplates();
 
@@ -125,6 +126,7 @@ namespace BattleZoneMobile
             LootSpawner lootSpawner = BuildLootSpawner(lootPrefabs);
             BotManager botManager = BuildBotManager(botPrefab);
             BuildVehicles(uiRefs);
+            BuildWeaponTestArea(weaponRoster, lootPrefabs);
             BattleRoyaleMatchFlow matchFlow = BuildMatchFlow(playerRefs, uiRefs, lootPrefabs, botManager);
 
             GameObject managerObject = new GameObject("GameManager");
@@ -4232,7 +4234,7 @@ namespace BattleZoneMobile
             };
         }
 
-        private PlayerRefs BuildPlayer(Camera mainCamera, RuntimeUIRefs uiRefs)
+        private PlayerRefs BuildPlayer(Camera mainCamera, RuntimeUIRefs uiRefs, AdvancedWeaponData[] weaponRoster)
         {
             GameObject spawn = new GameObject("PlayerSpawn");
             runtimeObjects.Add(spawn);
@@ -4272,6 +4274,7 @@ namespace BattleZoneMobile
             WeaponController weapons = player.AddComponent<WeaponController>();
             CombatRecoilApplicator combatRecoil = player.AddComponent<CombatRecoilApplicator>();
             CombatDebugWindow combatDebug = player.AddComponent<CombatDebugWindow>();
+            ModularWeaponLoadout modularLoadout = player.AddComponent<ModularWeaponLoadout>();
             PlayerInventory inventory = player.AddComponent<PlayerInventory>();
             LootPickupInteractor pickup = player.AddComponent<LootPickupInteractor>();
             VehicleInteractor vehicleInteractor = player.AddComponent<VehicleInteractor>();
@@ -4301,7 +4304,8 @@ namespace BattleZoneMobile
             WeaponModelRig weaponModelRig = placeholderAnimator.GetComponentInChildren<WeaponModelRig>();
             weapons.ConfigureForRuntime(mainCamera, muzzleObject.transform, controller, weaponModelRig, damageNumberPrefab, hitEffectPrefab, combatMask, pistol, rifle, smg, sniper, shotgun);
             combatRecoil.Configure(controller, null, uiRefs.UIManager);
-            combatDebug.Configure(weapons, null, combatRecoil, health);
+            modularLoadout.ConfigureForRuntime(mainCamera, muzzleObject.transform, visualAnimator, controller, combatRecoil, null, combatMask, BuildStartingModularWeapons(weaponRoster));
+            combatDebug.Configure(weapons, modularLoadout, combatRecoil, health);
             animationEventBridge?.Configure(weapons, null);
             inventory.ConfigureForRuntime(weapons, health);
             pickup.ConfigureForRuntime(mainCamera, inventory, uiRefs.PickupPrompt, lootMask);
@@ -4327,6 +4331,48 @@ namespace BattleZoneMobile
                 VehicleInteractor = vehicleInteractor,
                 Knockdown = knockdown
             };
+        }
+
+        private static AdvancedWeaponData[] BuildStartingModularWeapons(AdvancedWeaponData[] weaponRoster)
+        {
+            AdvancedWeaponData sidearm = FindAdvancedWeapon(weaponRoster, "sidearm_p9");
+            AdvancedWeaponData rifle = FindAdvancedWeapon(weaponRoster, "vxr_56");
+
+            if (sidearm != null && rifle != null)
+            {
+                return new[] { sidearm, rifle };
+            }
+
+            if (sidearm != null)
+            {
+                return new[] { sidearm };
+            }
+
+            if (rifle != null)
+            {
+                return new[] { rifle };
+            }
+
+            return new AdvancedWeaponData[0];
+        }
+
+        private static AdvancedWeaponData FindAdvancedWeapon(AdvancedWeaponData[] weaponRoster, string weaponId)
+        {
+            if (weaponRoster == null || string.IsNullOrWhiteSpace(weaponId))
+            {
+                return null;
+            }
+
+            for (int i = 0; i < weaponRoster.Length; i++)
+            {
+                AdvancedWeaponData weapon = weaponRoster[i];
+                if (weapon != null && string.Equals(weapon.WeaponId, weaponId, System.StringComparison.OrdinalIgnoreCase))
+                {
+                    return weapon;
+                }
+            }
+
+            return null;
         }
 
         private HumanoidPlaceholderAnimator BuildHumanoidVisual(Transform playerRoot, Transform muzzlePoint, Health health)
@@ -4813,6 +4859,152 @@ namespace BattleZoneMobile
                 CreateLootTemplate("PF_RuntimeLoot_Helmet", LootKind.Helmet, 1, "Tier 2 Helmet", new Vector3(0.46f, 0.28f, 0.46f), playerMaterial, 0, LootRarity.Rare),
                 CreateLootTemplate("PF_RuntimeLoot_Backpack", LootKind.Backpack, 1, "Backpack", new Vector3(0.52f, 0.44f, 0.28f), fenceMaterial, 0, LootRarity.Rare)
             };
+        }
+
+        private void BuildWeaponTestArea(AdvancedWeaponData[] weaponRoster, LootItem[] lootPrefabs)
+        {
+            if (weaponRoster == null || weaponRoster.Length == 0)
+            {
+                return;
+            }
+
+            GameObject root = new GameObject("M24B Weapon Test Area");
+            runtimeObjects.Add(root);
+            Vector3 origin = new Vector3(214f, 1.15f, -214f);
+            runtimeLocationNames.Add("Weapon Test");
+            runtimeLocationPositions.Add(origin);
+
+            GameObject pad = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            pad.name = "M24B Weapon Test Area Pad";
+            pad.transform.SetParent(root.transform, true);
+            pad.transform.position = origin + new Vector3(0f, -0.11f, 0f);
+            pad.transform.localScale = new Vector3(24f, 0.18f, 18f);
+            pad.GetComponent<Renderer>().sharedMaterial = sidewalkMaterial != null ? sidewalkMaterial : roadMaterial;
+            pad.AddComponent<CombatSurface>().Configure(CombatSurfaceType.Stone);
+
+            for (int i = 0; i < weaponRoster.Length; i++)
+            {
+                AdvancedWeaponData weapon = weaponRoster[i];
+                if (weapon == null)
+                {
+                    continue;
+                }
+
+                int row = i / 5;
+                int column = i % 5;
+                Vector3 position = origin + new Vector3(-9.5f + column * 4.75f, 0.58f, -5.5f + row * 3.3f);
+                WeaponVisualPlaceholder visual = WeaponVisualPlaceholderFactory.CreateWorldPickup(weapon, root.transform, position, lootWeaponMaterial);
+                SetLayerRecursive(visual.gameObject, lootLayer);
+            }
+
+            PlaceTestAmmoPickup(root.transform, lootPrefabs, LootKind.LightAmmo, origin + new Vector3(-9f, 0.55f, 5.8f));
+            PlaceTestAmmoPickup(root.transform, lootPrefabs, LootKind.MediumAmmo, origin + new Vector3(-6f, 0.55f, 5.8f));
+            PlaceTestAmmoPickup(root.transform, lootPrefabs, LootKind.HeavyAmmo, origin + new Vector3(-3f, 0.55f, 5.8f));
+            PlaceTestAmmoPickup(root.transform, lootPrefabs, LootKind.ShellAmmo, origin + new Vector3(0f, 0.55f, 5.8f));
+
+            CreateWeaponTestTarget(root.transform, origin + new Vector3(6f, 0f, 4.8f), "M24B Hit Zone Target A");
+            CreateWeaponTestTarget(root.transform, origin + new Vector3(10f, 0f, 4.8f), "M24B Hit Zone Target B");
+
+            CreateSurfaceTestPanel(root.transform, origin + new Vector3(4.4f, 1f, -7.1f), CombatSurfaceType.Metal, m20MetalMaterial, "Metal");
+            CreateSurfaceTestPanel(root.transform, origin + new Vector3(7.2f, 1f, -7.1f), CombatSurfaceType.Wood, fenceMaterial, "Wood");
+            CreateSurfaceTestPanel(root.transform, origin + new Vector3(10f, 1f, -7.1f), CombatSurfaceType.Stone, rockMaterial, "Stone");
+            CreateSurfaceTestPanel(root.transform, origin + new Vector3(12.8f, 1f, -7.1f), CombatSurfaceType.Glass, windowMaterial, "Glass");
+        }
+
+        private void PlaceTestAmmoPickup(Transform parent, LootItem[] lootPrefabs, LootKind kind, Vector3 position)
+        {
+            LootItem prefab = FindLootPrefab(lootPrefabs, kind);
+            if (prefab == null)
+            {
+                return;
+            }
+
+            LootItem instance = Instantiate(prefab, position, Quaternion.identity, parent);
+            instance.name = $"M24B Test {kind}";
+            instance.gameObject.SetActive(true);
+            SetLayerRecursive(instance.gameObject, lootLayer);
+        }
+
+        private static LootItem FindLootPrefab(LootItem[] lootPrefabs, LootKind kind)
+        {
+            if (lootPrefabs == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < lootPrefabs.Length; i++)
+            {
+                LootItem prefab = lootPrefabs[i];
+                if (prefab != null && prefab.Kind == kind)
+                {
+                    return prefab;
+                }
+            }
+
+            return null;
+        }
+
+        private void CreateWeaponTestTarget(Transform parent, Vector3 position, string objectName)
+        {
+            GameObject target = new GameObject(objectName);
+            target.transform.SetParent(parent, true);
+            target.transform.position = position;
+            Health health = target.AddComponent<Health>();
+            health.SetMaxHealth(250f, true);
+
+            CreateTargetHitPart(target.transform, health, "Head", CombatHitZone.Head, PrimitiveType.Sphere, new Vector3(0f, 1.72f, 0f), new Vector3(0.36f, 0.36f, 0.36f), playerMaterial);
+            CreateTargetHitPart(target.transform, health, "Chest", CombatHitZone.Chest, PrimitiveType.Cube, new Vector3(0f, 1.14f, 0f), new Vector3(0.62f, 0.72f, 0.28f), playerAccentMaterial);
+            CreateTargetHitPart(target.transform, health, "Left Arm", CombatHitZone.Arm, PrimitiveType.Capsule, new Vector3(-0.48f, 1.15f, 0f), new Vector3(0.18f, 0.56f, 0.18f), playerMaterial);
+            CreateTargetHitPart(target.transform, health, "Right Arm", CombatHitZone.Arm, PrimitiveType.Capsule, new Vector3(0.48f, 1.15f, 0f), new Vector3(0.18f, 0.56f, 0.18f), playerMaterial);
+            CreateTargetHitPart(target.transform, health, "Left Leg", CombatHitZone.Leg, PrimitiveType.Capsule, new Vector3(-0.18f, 0.46f, 0f), new Vector3(0.2f, 0.72f, 0.2f), playerMaterial);
+            CreateTargetHitPart(target.transform, health, "Right Leg", CombatHitZone.Leg, PrimitiveType.Capsule, new Vector3(0.18f, 0.46f, 0f), new Vector3(0.2f, 0.72f, 0.2f), playerMaterial);
+        }
+
+        private void CreateTargetHitPart(Transform parent, Health health, string partName, CombatHitZone zone, PrimitiveType primitive, Vector3 localPosition, Vector3 scale, Material material)
+        {
+            GameObject part = GameObject.CreatePrimitive(primitive);
+            part.name = $"{parent.name} {partName}";
+            part.transform.SetParent(parent, false);
+            part.transform.localPosition = localPosition;
+            part.transform.localScale = scale;
+            Renderer renderer = part.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.sharedMaterial = material != null ? material : playerMaterial;
+            }
+
+            CombatHitbox hitbox = part.AddComponent<CombatHitbox>();
+            hitbox.Configure(zone, health);
+        }
+
+        private void CreateSurfaceTestPanel(Transform parent, Vector3 position, CombatSurfaceType surfaceType, Material material, string label)
+        {
+            GameObject panel = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            panel.name = $"M24B {label} Surface Panel";
+            panel.transform.SetParent(parent, true);
+            panel.transform.position = position;
+            panel.transform.localScale = new Vector3(1.75f, 1.4f, 0.18f);
+            Renderer renderer = panel.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.sharedMaterial = material != null ? material : coverMaterial;
+            }
+
+            panel.AddComponent<CombatSurface>().Configure(surfaceType);
+        }
+
+        private static void SetLayerRecursive(GameObject target, int layer)
+        {
+            if (target == null || layer < 0)
+            {
+                return;
+            }
+
+            target.layer = layer;
+            for (int i = 0; i < target.transform.childCount; i++)
+            {
+                SetLayerRecursive(target.transform.GetChild(i).gameObject, layer);
+            }
         }
 
         private LootItem CreateLootTemplate(string objectName, LootKind kind, int amount, string displayName, Vector3 scale, Material material, int backpackCost, LootRarity rarity = LootRarity.Common)

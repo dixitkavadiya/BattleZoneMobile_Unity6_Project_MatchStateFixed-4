@@ -1,5 +1,19 @@
 # BattleZone Mobile Changelog
 
+## Milestone 24B - Original Weapon Set
+
+- Added 10 original weapon `AdvancedWeaponData` assets under `Assets/BattleZoneMobile/Resources/WeaponData`: VXR-56, ARK-74, Sentinel AR, Pulse-9, Raptor-45, Longshot DMR, Falcon SR, Breacher-12, Sidearm P9, and Hammer .50.
+- Extended the Milestone 24A data contract with fire modes, loadout slots, rarity, effective range, max range, tactical/empty reload timings, equip time, bolt/pump cooldowns, VFX references, visual prefab references, icon placeholder data, and attachment slot compatibility.
+- Added fire mode support for Semi-auto, Full-auto, Burst, Bolt-action, and Pump-action, including a `SwitchFireMode` hook.
+- Added `ModularWeaponLoadout` for primary, secondary, and pistol slots with equip, unequip, weapon switching, empty-hands fallback, pickup replacement rules, ammo validation, reload guarding, and movement-safe control locking.
+- Added `CombatWeaponRoster` resource loading for the original weapon data assets.
+- Added `WeaponVisualPlaceholder` and `WeaponVisualPlaceholderFactory` for temporary original weapon views with muzzle, shell-ejection, hand-grip, optic, muzzle, magazine, grip, pickup collider, equipped-view, and world-pickup hooks.
+- Added a runtime `M24B Weapon Test Area` with all 10 weapon placeholder views, ammo pickups, static hit-zone targets, and Metal/Wood/Stone/Glass surface panels.
+- Added `UIManager.SetAdvancedWeaponHud` so the modular loadout can display weapon name, icon placeholder text, ammo, reserve ammo, fire mode, reload state, and current slot without redesigning the existing HUD.
+- Kept the stable live-match `WeaponController` as the active gameplay input path for this checkpoint to avoid duplicate shots or regressions in movement, joystick, camera, aircraft/drop/landing, inventory, and HUD.
+- Added `WEAPON_BALANCE.md` with the full balance table, intended roles, fire modes, attachment slots, and placeholder limitations.
+- Runtime C# compile check completed with Unity 6.5 Roslyn references with zero errors and zero warnings.
+
 ## Milestone 24A - AAA Combat Foundation
 
 - Added a data-driven combat foundation through `AdvancedWeaponData` ScriptableObjects for damage, fire rate, reload time, magazine size, range, bullet speed, recoil, spread, attachments, modular audio, animation hooks, body-zone multipliers, and surface impact profiles.

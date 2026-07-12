@@ -34,16 +34,21 @@ namespace BattleZoneMobile
 
         private readonly RaycastHit[] raycastHits = new RaycastHit[32];
         private Coroutine reloadRoutine;
+        private Coroutine burstRoutine;
         private float nextFireTime;
+        private float actionLockedUntilTime;
         private float spreadBloom;
         private bool equipped = true;
+        private CombatFireMode currentFireMode;
 
         public abstract CombatWeaponType WeaponType { get; }
         public AdvancedWeaponData Data => weaponData;
         public int MagazineAmmo { get; private set; }
         public int ReserveAmmo { get; private set; }
         public bool IsReloading => reloadRoutine != null;
+        public bool IsBursting => burstRoutine != null;
         public bool IsEquipped => equipped;
+        public CombatFireMode CurrentFireMode => currentFireMode;
 
         public virtual void Initialize(ModularWeaponRuntimeContext context, AdvancedWeaponData data)
         {
@@ -61,6 +66,7 @@ namespace BattleZoneMobile
 
             MagazineAmmo = weaponData != null ? weaponData.MagazineSize : 0;
             ReserveAmmo = weaponData != null ? weaponData.StartingReserveAmmo : 0;
+            currentFireMode = weaponData != null ? weaponData.PrimaryFireMode : CombatFireMode.SemiAuto;
             spreadBloom = 0f;
         }
 
@@ -75,6 +81,7 @@ namespace BattleZoneMobile
         public virtual void Equip()
         {
             equipped = true;
+            actionLockedUntilTime = Time.time + (weaponData != null ? weaponData.EquipTime : 0f);
             PlayClip(weaponData != null && weaponData.Audio != null ? weaponData.Audio.equip : null);
             SetAnimatorTrigger(weaponData != null && weaponData.AnimationHooks != null ? weaponData.AnimationHooks.equipTrigger : null);
         }
@@ -82,18 +89,31 @@ namespace BattleZoneMobile
         public virtual void Unequip()
         {
             equipped = false;
+            StopBurst();
             PlayClip(weaponData != null && weaponData.Audio != null ? weaponData.Audio.unequip : null);
             SetAnimatorTrigger(weaponData != null && weaponData.AnimationHooks != null ? weaponData.AnimationHooks.unequipTrigger : null);
         }
 
         public virtual bool TryFire(bool triggerHeld, bool aiming, bool moving, bool crouching, bool prone)
         {
+            return TryFire(currentFireMode, triggerHeld, aiming, moving, crouching, prone);
+        }
+
+        public virtual bool TryFire(CombatFireMode requestedFireMode, bool triggerHeld, bool aiming, bool moving, bool crouching, bool prone)
+        {
             if (!equipped || weaponData == null || IsReloading || Time.time < nextFireTime)
             {
                 return false;
             }
 
-            if (!triggerHeld && weaponData.Automatic)
+            if (Time.time < actionLockedUntilTime || IsBursting)
+            {
+                return false;
+            }
+
+            CombatFireMode fireMode = weaponData.SupportsFireMode(requestedFireMode) ? requestedFireMode : weaponData.PrimaryFireMode;
+            currentFireMode = fireMode;
+            if (fireMode == CombatFireMode.FullAuto && !triggerHeld)
             {
                 return false;
             }
@@ -104,7 +124,44 @@ namespace BattleZoneMobile
                 return false;
             }
 
-            nextFireTime = Time.time + 1f / weaponData.FireRate;
+            if (fireMode == CombatFireMode.Burst)
+            {
+                burstRoutine = StartCoroutine(BurstRoutine(aiming, moving, crouching, prone));
+                return true;
+            }
+
+            FireOneShot(aiming, moving, crouching, prone);
+            nextFireTime = Time.time + ResolvePostShotDelay(fireMode);
+            actionLockedUntilTime = Mathf.Max(actionLockedUntilTime, Time.time + ResolveActionCooldown(fireMode));
+            return true;
+        }
+
+        public virtual CombatFireMode SwitchFireMode()
+        {
+            if (weaponData == null)
+            {
+                currentFireMode = CombatFireMode.SemiAuto;
+                return currentFireMode;
+            }
+
+            currentFireMode = weaponData.GetNextFireMode(currentFireMode);
+            return currentFireMode;
+        }
+
+        public virtual void AddReserveAmmo(int amount)
+        {
+            ReserveAmmo = Mathf.Max(0, ReserveAmmo + Mathf.Max(0, amount));
+        }
+
+        public virtual void SetAmmo(int magazine, int reserve)
+        {
+            int magazineSize = weaponData != null ? weaponData.MagazineSize : Mathf.Max(1, magazine);
+            MagazineAmmo = Mathf.Clamp(magazine, 0, magazineSize);
+            ReserveAmmo = Mathf.Max(0, reserve);
+        }
+
+        private void FireOneShot(bool aiming, bool moving, bool crouching, bool prone)
+        {
             if (weaponData.UsesAmmo)
             {
                 MagazineAmmo = Mathf.Max(0, MagazineAmmo - 1);
@@ -115,7 +172,6 @@ namespace BattleZoneMobile
             recoilApplicator?.Apply(weaponData, aiming, spreadBloom);
             PlayClip(weaponData.Audio != null ? weaponData.Audio.shoot : null);
             SetAnimatorTrigger(weaponData.AnimationHooks != null ? weaponData.AnimationHooks.fireTrigger : null);
-            return true;
         }
 
         public virtual void RequestReload()
@@ -273,9 +329,23 @@ namespace BattleZoneMobile
         private IEnumerator ReloadRoutine()
         {
             PlayClip(weaponData.Audio != null ? weaponData.Audio.reload : null);
-            SetAnimatorTrigger(weaponData.AnimationHooks != null ? weaponData.AnimationHooks.reloadTrigger : null);
+            bool emptyReload = MagazineAmmo <= 0;
+            string trigger = weaponData.AnimationHooks != null
+                ? emptyReload ? weaponData.AnimationHooks.emptyReloadTrigger : weaponData.AnimationHooks.tacticalReloadTrigger
+                : null;
+            if (string.IsNullOrWhiteSpace(trigger) && weaponData.AnimationHooks != null)
+            {
+                trigger = weaponData.AnimationHooks.reloadTrigger;
+            }
 
-            float duration = weaponData.ReloadTime;
+            SetAnimatorTrigger(trigger);
+
+            float duration = emptyReload ? weaponData.EmptyReloadTime : weaponData.TacticalReloadTime;
+            if (duration <= 0f)
+            {
+                duration = weaponData.ReloadTime;
+            }
+
             float commitTime = duration * (weaponData.AnimationHooks != null ? weaponData.AnimationHooks.reloadCommitNormalizedTime : 0.82f);
             yield return new WaitForSeconds(Mathf.Max(0f, commitTime));
             CommitReload();
@@ -301,6 +371,63 @@ namespace BattleZoneMobile
             nextFireTime = Time.time + 0.16f;
             PlayClip(weaponData != null && weaponData.Audio != null ? weaponData.Audio.dryFire : null);
             SetAnimatorTrigger(weaponData != null && weaponData.AnimationHooks != null ? weaponData.AnimationHooks.dryFireTrigger : null);
+        }
+
+        private IEnumerator BurstRoutine(bool aiming, bool moving, bool crouching, bool prone)
+        {
+            int shots = Mathf.Max(1, weaponData.BurstShotCount);
+            for (int i = 0; i < shots; i++)
+            {
+                if (!equipped || IsReloading || (weaponData.UsesAmmo && MagazineAmmo <= 0))
+                {
+                    break;
+                }
+
+                FireOneShot(aiming, moving, crouching, prone);
+                if (i < shots - 1)
+                {
+                    yield return new WaitForSeconds(weaponData.BurstShotInterval);
+                }
+            }
+
+            nextFireTime = Time.time + ResolvePostShotDelay(CombatFireMode.Burst);
+            actionLockedUntilTime = Mathf.Max(actionLockedUntilTime, Time.time + ResolveActionCooldown(CombatFireMode.Burst));
+            burstRoutine = null;
+        }
+
+        private void StopBurst()
+        {
+            if (burstRoutine != null)
+            {
+                StopCoroutine(burstRoutine);
+                burstRoutine = null;
+            }
+        }
+
+        private float ResolvePostShotDelay(CombatFireMode mode)
+        {
+            float baseDelay = 1f / Mathf.Max(0.01f, weaponData.FireRate);
+            if (mode == CombatFireMode.Burst)
+            {
+                return Mathf.Max(baseDelay, weaponData.BurstShotInterval * Mathf.Max(1, weaponData.BurstShotCount));
+            }
+
+            return baseDelay;
+        }
+
+        private float ResolveActionCooldown(CombatFireMode mode)
+        {
+            switch (mode)
+            {
+                case CombatFireMode.BoltAction:
+                    SetAnimatorTrigger(weaponData.AnimationHooks != null ? weaponData.AnimationHooks.boltCycleTrigger : null);
+                    return weaponData.BoltActionCooldown;
+                case CombatFireMode.PumpAction:
+                    SetAnimatorTrigger(weaponData.AnimationHooks != null ? weaponData.AnimationHooks.pumpCycleTrigger : null);
+                    return weaponData.PumpActionCooldown;
+                default:
+                    return 0f;
+            }
         }
 
         private void PlayClip(AudioClip clip)

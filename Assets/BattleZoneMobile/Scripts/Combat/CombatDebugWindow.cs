@@ -6,6 +6,7 @@ namespace BattleZoneMobile
     {
         [SerializeField] private bool showCombatDebugWindow;
         [SerializeField] private WeaponController legacyWeaponController;
+        [SerializeField] private ModularWeaponLoadout modularLoadout;
         [SerializeField] private ModularWeaponBase modularWeapon;
         [SerializeField] private CombatRecoilApplicator recoilApplicator;
         [SerializeField] private Health localHealth;
@@ -20,6 +21,15 @@ namespace BattleZoneMobile
         {
             legacyWeaponController = legacyController;
             modularWeapon = activeModularWeapon;
+            recoilApplicator = recoil;
+            localHealth = health;
+        }
+
+        public void Configure(WeaponController legacyController, ModularWeaponLoadout loadout, CombatRecoilApplicator recoil, Health health)
+        {
+            legacyWeaponController = legacyController;
+            modularLoadout = loadout;
+            modularWeapon = loadout != null ? loadout.CurrentWeapon : null;
             recoilApplicator = recoil;
             localHealth = health;
         }
@@ -39,6 +49,7 @@ namespace BattleZoneMobile
             GUILayout.BeginArea(new Rect(18f, 420f, 380f, 230f), "Combat Debug", GUI.skin.window);
             GUILayout.Label($"Legacy weapon: {BuildLegacyWeaponLine()}");
             GUILayout.Label($"Modular weapon: {BuildModularWeaponLine()}");
+            GUILayout.Label($"Modular slot: {(modularLoadout != null ? modularLoadout.ActiveSlot.ToString() : "none")}");
             GUILayout.Label($"Delivery: {BuildDeliveryLine()}");
             GUILayout.Label($"Ammo: {BuildAmmoLine()}");
             GUILayout.Label($"Crosshair recoil: {(recoilApplicator != null ? recoilApplicator.CurrentCrosshairBloom.ToString("0.00") : "n/a")}");
@@ -59,6 +70,12 @@ namespace BattleZoneMobile
 
         private string BuildModularWeaponLine()
         {
+            if (modularLoadout != null && modularLoadout.CurrentData != null)
+            {
+                modularWeapon = modularLoadout.CurrentWeapon;
+                return modularLoadout.CurrentData.DisplayName;
+            }
+
             return modularWeapon != null && modularWeapon.Data != null ? modularWeapon.Data.DisplayName : "none";
         }
 
@@ -69,6 +86,14 @@ namespace BattleZoneMobile
 
         private string BuildAmmoLine()
         {
+            if (modularWeapon == null)
+            {
+                if (modularLoadout != null && modularLoadout.CurrentWeapon != null)
+                {
+                    modularWeapon = modularLoadout.CurrentWeapon;
+                }
+            }
+
             if (modularWeapon == null)
             {
                 return "legacy controller";

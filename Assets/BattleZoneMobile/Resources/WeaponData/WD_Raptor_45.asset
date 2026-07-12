@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4b6aaa1f39448dd8555b028fbb7f987, type: 3}
+  m_Name: WD_Raptor_45
+  m_EditorClassIdentifier:
+  weaponId: raptor_45
+  weaponType: 1
+  equipSlot: 0
+  delivery: 0
+  ammoClass: 1
+  rarity: 2
+  displayName: Raptor-45
+  primaryFireMode: 1
+  supportedFireModes: [1, 2, 0]
+  burstShotCount: 2
+  burstShotInterval: 0.07
+  boltActionCooldown: 0
+  pumpActionCooldown: 0
+  damage: 21
+  fireRate: 10.5
+  reloadTime: 1.72
+  tacticalReloadTime: 1.42
+  emptyReloadTime: 1.94
+  equipTime: 0.26
+  magazineSize: 28
+  startingReserveAmmo: 112
+  effectiveRange: 48
+  range: 105
+  bulletSpeed: 315
+  pelletCount: 1
+  automatic: 1
+  usesAmmo: 1
+  recoil: {cameraPitchKick: 0.3, cameraYawKick: 0.22, cameraRecoverySpeed: 21, weaponKickDistance: 0.03, weaponPitchKick: 1.45, weaponReturnSpeed: 22, crosshairBloomPerShot: 12, crosshairRecoverySpeed: 22}
+  spread: {hipSpreadDegrees: 1.36, adsSpreadDegrees: 0.48, movingSpreadDegrees: 0.76, crouchMultiplier: 0.8, proneMultiplier: 0.64, bloomPerShotDegrees: 0.18, maxBloomDegrees: 3, bloomRecoverySpeed: 4.2}
+  bodyDamage: {headMultiplier: 1.98, neckMultiplier: 1.38, chestMultiplier: 1, armMultiplier: 0.7, legMultiplier: 0.6}
+  attachments:
+    supportsOptic: 1
+    supportsMuzzle: 1
+    supportsMagazine: 1
+    supportsGrip: 1
+    supportsStock: 1
+    supportsUnderbarrel: 0
+    compatibleAttachmentIds: [optic_micro_dot, muzzle_short_brake, mag_light_ext, grip_stub, stock_compact]
+  audio: {shoot: {fileID: 0}, suppressedShoot: {fileID: 0}, reload: {fileID: 0}, dryFire: {fileID: 0}, equip: {fileID: 0}, unequip: {fileID: 0}, impact: {fileID: 0}}
+  vfx: {muzzleFlashPrefab: {fileID: 0}, shellEjectionPrefab: {fileID: 0}, tracerPrefab: {fileID: 0}, impactPrefab: {fileID: 0}}
+  visual:
+    equippedPrefab: {fileID: 0}
+    worldPickupPrefab: {fileID: 0}
+    icon: {fileID: 0}
+    iconColor: {r: 1, g: 0.72, b: 0.46, a: 1}
+    placeholderLabel: Temporary original placeholder - replace with final authored Raptor-45 art
+    equippedScale: {x: 0.92, y: 0.92, z: 0.92}
+    worldScale: {x: 1.16, y: 1.16, z: 1.16}
+  animationHooks: {equipTrigger: Equip, unequipTrigger: Unequip, idleBool: WeaponIdle, fireTrigger: Fire, reloadTrigger: Reload, tacticalReloadTrigger: TacticalReload, emptyReloadTrigger: EmptyReload, dryFireTrigger: DryFire, boltCycleTrigger: BoltCycle, pumpCycleTrigger: PumpCycle, weaponSwitchTrigger: WeaponSwitch, reloadCommitNormalizedTime: 0.77}
+  surfaceImpacts: []

@@ -30,6 +30,31 @@ namespace BattleZoneMobile
         Throwable
     }
 
+    public enum CombatFireMode
+    {
+        SemiAuto,
+        FullAuto,
+        Burst,
+        BoltAction,
+        PumpAction
+    }
+
+    public enum CombatWeaponEquipSlot
+    {
+        Primary,
+        Secondary,
+        Pistol,
+        Melee,
+        Throwable
+    }
+
+    public enum CombatLoadoutSlot
+    {
+        Primary,
+        Secondary,
+        Pistol
+    }
+
     public enum CombatHitZone
     {
         Head,

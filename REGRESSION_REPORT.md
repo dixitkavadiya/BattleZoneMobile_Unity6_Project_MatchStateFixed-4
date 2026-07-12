@@ -1,5 +1,36 @@
 # BattleZone Mobile - Regression Report
 
+## Milestone 24B Original Weapon Set - 2026-07-12
+
+Scope:
+
+- Current project only: `BattleZoneMobile_Unity6_Project_MatchStateFixed-4`.
+- Built on Milestone 24A combat foundation.
+- Original weapon roster and modular weapon-loadout foundation only; no rewrite of movement, joystick, camera, Animator ownership, aircraft/freefall/landing, damage overlay, existing inventory, or existing live-match HUD flow.
+
+Regression audit results:
+
+- PASS: `ReliablePlayerMovement` was not modified and remains Combat ground movement owner.
+- PASS: `BattleRoyaleMatchFlow` was not modified and remains aircraft/freefall/parachute/landing pose owner.
+- PASS: Animator placement was not changed; Unity `Animator` remains on visual child `LowPolyOriginalHumanoid` with root motion disabled.
+- PASS: Red damage overlay code was not modified.
+- PASS: Existing `WeaponController` remains the active live-match input path, preventing duplicate shots from one button press.
+- PASS: `ModularWeaponLoadout` is initialized passively and does not disable movement, camera, or the stable controller.
+- PASS: Weapon values are stored in `AdvancedWeaponData` assets, not hardcoded inside the modular controller scripts.
+- PASS: Weapon Test Area is added under a named root and does not alter match start, aircraft, drop, landing, bot, vehicle, zone, or inventory flow.
+- PASS: Runtime C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+
+Architecture notes:
+
+- The Milestone 24B modular weapon stack now supports primary, secondary, and pistol slots, fire mode switching, burst timing, bolt/pump cooldowns, dry fire, reload guards, and ammo clamping.
+- The live gameplay controller is intentionally left on the proven `WeaponController` for this checkpoint. Full migration of player input from legacy weapons to modular weapons remains a later integration task after Play Mode testing.
+- Temporary original weapon visuals are generated at runtime by `WeaponVisualPlaceholderFactory` and are explicitly labeled as placeholders in `WEAPON_BALANCE.md`.
+
+Unity Editor verification:
+
+- NOT RUN: Unity batch mode remains blocked by Unity licensing startup timeout in this environment.
+- Manual Play Mode validation is listed in `TEST_CHECKLIST.md`.
+
 ## Milestone 24A AAA Combat Foundation - 2026-07-12
 
 Scope:

@@ -228,6 +228,28 @@ namespace BattleZoneMobile
             }
         }
 
+        public void SetAdvancedWeaponHud(string weapon, string slot, string fireMode, int magazine, int reserve, bool reloading, string iconLabel)
+        {
+            string safeWeapon = string.IsNullOrEmpty(weapon) ? "Empty Hands" : weapon;
+            string safeSlot = string.IsNullOrEmpty(slot) ? "NONE" : slot;
+            string safeFireMode = string.IsNullOrEmpty(fireMode) ? "SAFE" : fireMode;
+            string icon = string.IsNullOrEmpty(iconLabel) ? "[]" : iconLabel;
+
+            if (weaponText != null)
+            {
+                string reloadLabel = reloading ? " | RELOAD" : string.Empty;
+                weaponText.text = $"{icon} {safeWeapon}\n{safeSlot} | {safeFireMode}{reloadLabel}";
+            }
+
+            if (ammoText != null)
+            {
+                int safeMagazine = Mathf.Max(0, magazine);
+                int safeReserve = Mathf.Max(0, reserve);
+                ammoText.text = $"{safeMagazine}/{safeReserve}";
+                ammoText.color = safeMagazine <= 0 ? emptyAmmoColor : safeMagazine <= 5 ? lowAmmoColor : normalAmmoColor;
+            }
+        }
+
         public void SetInventory(int medkits, string latestPickup)
         {
             if (medkitText != null)

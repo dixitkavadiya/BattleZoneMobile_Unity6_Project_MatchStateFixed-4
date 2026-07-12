@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4b6aaa1f39448dd8555b028fbb7f987, type: 3}
+  m_Name: WD_Breacher_12
+  m_EditorClassIdentifier:
+  weaponId: breacher_12
+  weaponType: 4
+  equipSlot: 0
+  delivery: 0
+  ammoClass: 4
+  rarity: 2
+  displayName: Breacher-12
+  primaryFireMode: 4
+  supportedFireModes: [4]
+  burstShotCount: 1
+  burstShotInterval: 0.1
+  boltActionCooldown: 0
+  pumpActionCooldown: 0.58
+  damage: 78
+  fireRate: 1.05
+  reloadTime: 2.35
+  tacticalReloadTime: 1.95
+  emptyReloadTime: 2.68
+  equipTime: 0.42
+  magazineSize: 6
+  startingReserveAmmo: 30
+  effectiveRange: 24
+  range: 52
+  bulletSpeed: 260
+  pelletCount: 8
+  automatic: 0
+  usesAmmo: 1
+  recoil: {cameraPitchKick: 1.12, cameraYawKick: 0.32, cameraRecoverySpeed: 13, weaponKickDistance: 0.064, weaponPitchKick: 3.4, weaponReturnSpeed: 13, crosshairBloomPerShot: 18, crosshairRecoverySpeed: 16}
+  spread: {hipSpreadDegrees: 5.2, adsSpreadDegrees: 3.45, movingSpreadDegrees: 1.2, crouchMultiplier: 0.82, proneMultiplier: 0.74, bloomPerShotDegrees: 0.32, maxBloomDegrees: 4.6, bloomRecoverySpeed: 2.8}
+  bodyDamage: {headMultiplier: 1.55, neckMultiplier: 1.2, chestMultiplier: 1, armMultiplier: 0.82, legMultiplier: 0.74}
+  attachments:
+    supportsOptic: 1
+    supportsMuzzle: 1
+    supportsMagazine: 0
+    supportsGrip: 0
+    supportsStock: 1
+    supportsUnderbarrel: 0
+    compatibleAttachmentIds: [optic_reflex_bead, muzzle_ported_choke, stock_stable]
+  audio: {shoot: {fileID: 0}, suppressedShoot: {fileID: 0}, reload: {fileID: 0}, dryFire: {fileID: 0}, equip: {fileID: 0}, unequip: {fileID: 0}, impact: {fileID: 0}}
+  vfx: {muzzleFlashPrefab: {fileID: 0}, shellEjectionPrefab: {fileID: 0}, tracerPrefab: {fileID: 0}, impactPrefab: {fileID: 0}}
+  visual:
+    equippedPrefab: {fileID: 0}
+    worldPickupPrefab: {fileID: 0}
+    icon: {fileID: 0}
+    iconColor: {r: 1, g: 0.66, b: 0.22, a: 1}
+    placeholderLabel: Temporary original placeholder - replace with final authored Breacher-12 art
+    equippedScale: {x: 1.08, y: 1.08, z: 1.08}
+    worldScale: {x: 1.32, y: 1.32, z: 1.32}
+  animationHooks: {equipTrigger: Equip, unequipTrigger: Unequip, idleBool: WeaponIdle, fireTrigger: Fire, reloadTrigger: Reload, tacticalReloadTrigger: TacticalReload, emptyReloadTrigger: EmptyReload, dryFireTrigger: DryFire, boltCycleTrigger: BoltCycle, pumpCycleTrigger: PumpCycle, weaponSwitchTrigger: WeaponSwitch, reloadCommitNormalizedTime: 0.72}
+  surfaceImpacts: []

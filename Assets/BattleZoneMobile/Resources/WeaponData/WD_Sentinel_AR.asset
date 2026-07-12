@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4b6aaa1f39448dd8555b028fbb7f987, type: 3}
+  m_Name: WD_Sentinel_AR
+  m_EditorClassIdentifier:
+  weaponId: sentinel_ar
+  weaponType: 0
+  equipSlot: 0
+  delivery: 0
+  ammoClass: 2
+  rarity: 2
+  displayName: Sentinel AR
+  primaryFireMode: 2
+  supportedFireModes: [2, 0]
+  burstShotCount: 3
+  burstShotInterval: 0.09
+  boltActionCooldown: 0
+  pumpActionCooldown: 0
+  damage: 30
+  fireRate: 6.2
+  reloadTime: 2
+  tacticalReloadTime: 1.68
+  emptyReloadTime: 2.18
+  equipTime: 0.33
+  magazineSize: 25
+  startingReserveAmmo: 100
+  effectiveRange: 92
+  range: 175
+  bulletSpeed: 375
+  pelletCount: 1
+  automatic: 0
+  usesAmmo: 1
+  recoil: {cameraPitchKick: 0.5, cameraYawKick: 0.16, cameraRecoverySpeed: 17.5, weaponKickDistance: 0.036, weaponPitchKick: 2.1, weaponReturnSpeed: 18, crosshairBloomPerShot: 8.5, crosshairRecoverySpeed: 21}
+  spread: {hipSpreadDegrees: 1.35, adsSpreadDegrees: 0.28, movingSpreadDegrees: 0.5, crouchMultiplier: 0.74, proneMultiplier: 0.52, bloomPerShotDegrees: 0.1, maxBloomDegrees: 1.8, bloomRecoverySpeed: 4.1}
+  bodyDamage: {headMultiplier: 2.12, neckMultiplier: 1.48, chestMultiplier: 1, armMultiplier: 0.74, legMultiplier: 0.64}
+  attachments:
+    supportsOptic: 1
+    supportsMuzzle: 1
+    supportsMagazine: 1
+    supportsGrip: 1
+    supportsStock: 1
+    supportsUnderbarrel: 0
+    compatibleAttachmentIds: [optic_precision_dot, muzzle_linear_brake, mag_medium_ext, grip_angled, stock_precision]
+  audio: {shoot: {fileID: 0}, suppressedShoot: {fileID: 0}, reload: {fileID: 0}, dryFire: {fileID: 0}, equip: {fileID: 0}, unequip: {fileID: 0}, impact: {fileID: 0}}
+  vfx: {muzzleFlashPrefab: {fileID: 0}, shellEjectionPrefab: {fileID: 0}, tracerPrefab: {fileID: 0}, impactPrefab: {fileID: 0}}
+  visual:
+    equippedPrefab: {fileID: 0}
+    worldPickupPrefab: {fileID: 0}
+    icon: {fileID: 0}
+    iconColor: {r: 0.72, g: 1, b: 0.86, a: 1}
+    placeholderLabel: Temporary original placeholder - replace with final authored Sentinel AR art
+    equippedScale: {x: 1.05, y: 1.05, z: 1.05}
+    worldScale: {x: 1.3, y: 1.3, z: 1.3}
+  animationHooks: {equipTrigger: Equip, unequipTrigger: Unequip, idleBool: WeaponIdle, fireTrigger: Fire, reloadTrigger: Reload, tacticalReloadTrigger: TacticalReload, emptyReloadTrigger: EmptyReload, dryFireTrigger: DryFire, boltCycleTrigger: BoltCycle, pumpCycleTrigger: PumpCycle, weaponSwitchTrigger: WeaponSwitch, reloadCommitNormalizedTime: 0.8}
+  surfaceImpacts: []

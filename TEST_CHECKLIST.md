@@ -1,5 +1,40 @@
 # BattleZone Mobile - Test Checklist
 
+## Milestone 24B - Original Weapon Set
+
+Automated/static checks run in this workspace:
+
+- PASS: Runtime C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+- PASS: Weapon roster assets exist under `Assets/BattleZoneMobile/Resources/WeaponData`.
+- PASS: Roster includes VXR-56, ARK-74, Sentinel AR, Pulse-9, Raptor-45, Longshot DMR, Falcon SR, Breacher-12, Sidearm P9, and Hammer .50.
+- PASS: Every weapon asset uses `AdvancedWeaponData`.
+- PASS: Every weapon asset stores damage, body multipliers, fire mode, fire rate, magazine size, reserve ammo, reload times, effective range, max range, bullet speed, recoil, spread, ADS spread, movement spread, hip spread, equip time, rarity, ammo class, and attachment slots.
+- PASS: `ModularWeaponBase` supports Semi-auto, Full-auto, Burst, Bolt-action, and Pump-action behavior.
+- PASS: `ModularWeaponLoadout` supports primary, secondary, and pistol slots, equip/unequip, weapon switching, empty-hands fallback, and pickup replacement rules.
+- PASS: Modular ammo paths clamp magazine/reserve ammo and prevent negative ammo.
+- PASS: `UIManager.SetAdvancedWeaponHud` can show weapon name, icon placeholder, ammo, reserve ammo, fire mode, reload state, and slot.
+- PASS: Runtime builder creates `M24B Weapon Test Area` with all 10 placeholder weapon views, ammo pickups, hit-zone targets, and Metal/Wood/Stone/Glass surface panels.
+- PASS: Existing live-match fire/reload controls remain wired to the stable `WeaponController`, avoiding duplicate modular/legacy shots during this checkpoint.
+
+Required manual Unity Play Mode checks:
+
+1. Open `Assets/BattleZoneMobile/Scenes/BZ_Main.unity`.
+2. Press Play and confirm no red Console errors.
+3. Confirm `M24B Weapon Test Area` exists in the Hierarchy.
+4. Confirm all 10 weapon placeholder views exist under the test area.
+5. Confirm the test area includes Light, Medium, Heavy, and Shell ammo pickups.
+6. Confirm hit-zone targets contain Head, Chest, Arm, and Leg `CombatHitbox` parts.
+7. Confirm Metal, Wood, Stone, and Glass surface panels contain `CombatSurface`.
+8. Press `START MATCH`.
+9. Confirm aircraft/freefall/parachute/landing remain stable.
+10. Confirm WASD movement works after landing.
+11. Confirm mobile joystick movement works after landing.
+12. Confirm camera, sprint, jump, crouch, prone, aim, fire, reload, and weapon switching still work.
+13. Confirm reload does not permanently lock controls.
+14. Confirm ammo values remain valid and never display negative values.
+15. Confirm the permanent red overlay does not return.
+16. Optional: enable `CombatDebugWindow.Show Combat Debug Window` and verify it reports legacy and modular loadout diagnostics.
+
 ## Milestone 24A - AAA Combat Foundation
 
 Automated/static checks run in this workspace:

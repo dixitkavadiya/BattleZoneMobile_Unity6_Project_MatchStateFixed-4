@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4b6aaa1f39448dd8555b028fbb7f987, type: 3}
+  m_Name: WD_Longshot_DMR
+  m_EditorClassIdentifier:
+  weaponId: longshot_dmr
+  weaponType: 3
+  equipSlot: 0
+  delivery: 0
+  ammoClass: 3
+  rarity: 2
+  displayName: Longshot DMR
+  primaryFireMode: 0
+  supportedFireModes: [0]
+  burstShotCount: 3
+  burstShotInterval: 0.1
+  boltActionCooldown: 0
+  pumpActionCooldown: 0
+  damage: 48
+  fireRate: 3.2
+  reloadTime: 2.25
+  tacticalReloadTime: 1.86
+  emptyReloadTime: 2.52
+  equipTime: 0.38
+  magazineSize: 12
+  startingReserveAmmo: 60
+  effectiveRange: 124
+  range: 215
+  bulletSpeed: 430
+  pelletCount: 1
+  automatic: 0
+  usesAmmo: 1
+  recoil: {cameraPitchKick: 0.78, cameraYawKick: 0.18, cameraRecoverySpeed: 14.5, weaponKickDistance: 0.048, weaponPitchKick: 2.8, weaponReturnSpeed: 15, crosshairBloomPerShot: 7, crosshairRecoverySpeed: 18}
+  spread: {hipSpreadDegrees: 2.2, adsSpreadDegrees: 0.16, movingSpreadDegrees: 0.7, crouchMultiplier: 0.72, proneMultiplier: 0.46, bloomPerShotDegrees: 0.08, maxBloomDegrees: 1.4, bloomRecoverySpeed: 3.2}
+  bodyDamage: {headMultiplier: 2.18, neckMultiplier: 1.56, chestMultiplier: 1, armMultiplier: 0.76, legMultiplier: 0.66}
+  attachments:
+    supportsOptic: 1
+    supportsMuzzle: 1
+    supportsMagazine: 1
+    supportsGrip: 1
+    supportsStock: 1
+    supportsUnderbarrel: 0
+    compatibleAttachmentIds: [optic_marksman_3x, optic_clean_dot, muzzle_long_brake, mag_heavy_box, grip_precision, stock_precision]
+  audio: {shoot: {fileID: 0}, suppressedShoot: {fileID: 0}, reload: {fileID: 0}, dryFire: {fileID: 0}, equip: {fileID: 0}, unequip: {fileID: 0}, impact: {fileID: 0}}
+  vfx: {muzzleFlashPrefab: {fileID: 0}, shellEjectionPrefab: {fileID: 0}, tracerPrefab: {fileID: 0}, impactPrefab: {fileID: 0}}
+  visual:
+    equippedPrefab: {fileID: 0}
+    worldPickupPrefab: {fileID: 0}
+    icon: {fileID: 0}
+    iconColor: {r: 0.86, g: 0.94, b: 1, a: 1}
+    placeholderLabel: Temporary original placeholder - replace with final authored Longshot DMR art
+    equippedScale: {x: 1.12, y: 1.12, z: 1.12}
+    worldScale: {x: 1.34, y: 1.34, z: 1.34}
+  animationHooks: {equipTrigger: Equip, unequipTrigger: Unequip, idleBool: WeaponIdle, fireTrigger: Fire, reloadTrigger: Reload, tacticalReloadTrigger: TacticalReload, emptyReloadTrigger: EmptyReload, dryFireTrigger: DryFire, boltCycleTrigger: BoltCycle, pumpCycleTrigger: PumpCycle, weaponSwitchTrigger: WeaponSwitch, reloadCommitNormalizedTime: 0.82}
+  surfaceImpacts: []

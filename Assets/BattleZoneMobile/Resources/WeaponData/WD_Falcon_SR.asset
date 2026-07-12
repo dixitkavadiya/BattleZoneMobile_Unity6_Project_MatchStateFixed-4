@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b4b6aaa1f39448dd8555b028fbb7f987, type: 3}
+  m_Name: WD_Falcon_SR
+  m_EditorClassIdentifier:
+  weaponId: falcon_sr
+  weaponType: 2
+  equipSlot: 0
+  delivery: 1
+  ammoClass: 3
+  rarity: 3
+  displayName: Falcon SR
+  primaryFireMode: 3
+  supportedFireModes: [3]
+  burstShotCount: 1
+  burstShotInterval: 0.1
+  boltActionCooldown: 0.86
+  pumpActionCooldown: 0
+  damage: 88
+  fireRate: 0.75
+  reloadTime: 2.8
+  tacticalReloadTime: 2.34
+  emptyReloadTime: 3.12
+  equipTime: 0.48
+  magazineSize: 5
+  startingReserveAmmo: 25
+  effectiveRange: 180
+  range: 300
+  bulletSpeed: 520
+  pelletCount: 1
+  automatic: 0
+  usesAmmo: 1
+  recoil: {cameraPitchKick: 1.5, cameraYawKick: 0.22, cameraRecoverySpeed: 11.5, weaponKickDistance: 0.07, weaponPitchKick: 4.2, weaponReturnSpeed: 12, crosshairBloomPerShot: 6.5, crosshairRecoverySpeed: 16}
+  spread: {hipSpreadDegrees: 4.6, adsSpreadDegrees: 0.08, movingSpreadDegrees: 1.1, crouchMultiplier: 0.68, proneMultiplier: 0.38, bloomPerShotDegrees: 0.04, maxBloomDegrees: 1.2, bloomRecoverySpeed: 2.6}
+  bodyDamage: {headMultiplier: 2.35, neckMultiplier: 1.7, chestMultiplier: 1, armMultiplier: 0.78, legMultiplier: 0.68}
+  attachments:
+    supportsOptic: 1
+    supportsMuzzle: 1
+    supportsMagazine: 1
+    supportsGrip: 0
+    supportsStock: 1
+    supportsUnderbarrel: 0
+    compatibleAttachmentIds: [optic_scope_6x, optic_marksman_3x, muzzle_long_brake, mag_heavy_box, stock_precision]
+  audio: {shoot: {fileID: 0}, suppressedShoot: {fileID: 0}, reload: {fileID: 0}, dryFire: {fileID: 0}, equip: {fileID: 0}, unequip: {fileID: 0}, impact: {fileID: 0}}
+  vfx: {muzzleFlashPrefab: {fileID: 0}, shellEjectionPrefab: {fileID: 0}, tracerPrefab: {fileID: 0}, impactPrefab: {fileID: 0}}
+  visual:
+    equippedPrefab: {fileID: 0}
+    worldPickupPrefab: {fileID: 0}
+    icon: {fileID: 0}
+    iconColor: {r: 1, g: 0.52, b: 0.38, a: 1}
+    placeholderLabel: Temporary original placeholder - replace with final authored Falcon SR art
+    equippedScale: {x: 1.18, y: 1.18, z: 1.18}
+    worldScale: {x: 1.42, y: 1.42, z: 1.42}
+  animationHooks: {equipTrigger: Equip, unequipTrigger: Unequip, idleBool: WeaponIdle, fireTrigger: Fire, reloadTrigger: Reload, tacticalReloadTrigger: TacticalReload, emptyReloadTrigger: EmptyReload, dryFireTrigger: DryFire, boltCycleTrigger: BoltCycle, pumpCycleTrigger: PumpCycle, weaponSwitchTrigger: WeaponSwitch, reloadCommitNormalizedTime: 0.84}
+  surfaceImpacts: []
