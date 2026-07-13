@@ -4307,7 +4307,7 @@ namespace BattleZoneMobile
             modularLoadout.ConfigureForRuntime(mainCamera, muzzleObject.transform, visualAnimator, controller, combatRecoil, null, combatMask, BuildStartingModularWeapons(weaponRoster));
             combatDebug.Configure(weapons, modularLoadout, combatRecoil, health);
             animationEventBridge?.Configure(weapons, null);
-            inventory.ConfigureForRuntime(weapons, health);
+            inventory.ConfigureForRuntime(weapons, health, modularLoadout);
             pickup.ConfigureForRuntime(mainCamera, inventory, uiRefs.PickupPrompt, lootMask);
             vehicleInteractor.ConfigureForRuntime(controller, weapons, uiRefs.VehiclePrompt);
             uiRefs.HudTelemetry.Configure(player.transform, mainCamera, uiRefs.CompassText, uiRefs.MinimapArrow, uiRefs.MinimapZoneRing, uiRefs.MinimapLabel, uiRefs.MinimapNextZoneRing);
@@ -4863,52 +4863,30 @@ namespace BattleZoneMobile
 
         private void BuildWeaponTestArea(AdvancedWeaponData[] weaponRoster, LootItem[] lootPrefabs)
         {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
             if (weaponRoster == null || weaponRoster.Length == 0)
             {
                 return;
             }
 
-            GameObject root = new GameObject("M24B Weapon Test Area");
-            runtimeObjects.Add(root);
-            Vector3 origin = new Vector3(214f, 1.15f, -214f);
-            runtimeLocationNames.Add("Weapon Test");
-            runtimeLocationPositions.Add(origin);
+            GameObject root = Milestone24BWeaponTestAreaBuilder.BuildOrRepair(
+                weaponRoster,
+                Milestone24BWeaponTestAreaBuilder.DefaultOrigin,
+                lootLayer,
+                lootWeaponMaterial,
+                lootAmmoMaterial,
+                playerMaterial,
+                sidewalkMaterial != null ? sidewalkMaterial : roadMaterial,
+                false);
 
-            GameObject pad = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            pad.name = "M24B Weapon Test Area Pad";
-            pad.transform.SetParent(root.transform, true);
-            pad.transform.position = origin + new Vector3(0f, -0.11f, 0f);
-            pad.transform.localScale = new Vector3(24f, 0.18f, 18f);
-            pad.GetComponent<Renderer>().sharedMaterial = sidewalkMaterial != null ? sidewalkMaterial : roadMaterial;
-            pad.AddComponent<CombatSurface>().Configure(CombatSurfaceType.Stone);
-
-            for (int i = 0; i < weaponRoster.Length; i++)
+            if (root != null && !runtimeObjects.Contains(root))
             {
-                AdvancedWeaponData weapon = weaponRoster[i];
-                if (weapon == null)
-                {
-                    continue;
-                }
-
-                int row = i / 5;
-                int column = i % 5;
-                Vector3 position = origin + new Vector3(-9.5f + column * 4.75f, 0.58f, -5.5f + row * 3.3f);
-                WeaponVisualPlaceholder visual = WeaponVisualPlaceholderFactory.CreateWorldPickup(weapon, root.transform, position, lootWeaponMaterial);
-                SetLayerRecursive(visual.gameObject, lootLayer);
+                runtimeObjects.Add(root);
             }
 
-            PlaceTestAmmoPickup(root.transform, lootPrefabs, LootKind.LightAmmo, origin + new Vector3(-9f, 0.55f, 5.8f));
-            PlaceTestAmmoPickup(root.transform, lootPrefabs, LootKind.MediumAmmo, origin + new Vector3(-6f, 0.55f, 5.8f));
-            PlaceTestAmmoPickup(root.transform, lootPrefabs, LootKind.HeavyAmmo, origin + new Vector3(-3f, 0.55f, 5.8f));
-            PlaceTestAmmoPickup(root.transform, lootPrefabs, LootKind.ShellAmmo, origin + new Vector3(0f, 0.55f, 5.8f));
-
-            CreateWeaponTestTarget(root.transform, origin + new Vector3(6f, 0f, 4.8f), "M24B Hit Zone Target A");
-            CreateWeaponTestTarget(root.transform, origin + new Vector3(10f, 0f, 4.8f), "M24B Hit Zone Target B");
-
-            CreateSurfaceTestPanel(root.transform, origin + new Vector3(4.4f, 1f, -7.1f), CombatSurfaceType.Metal, m20MetalMaterial, "Metal");
-            CreateSurfaceTestPanel(root.transform, origin + new Vector3(7.2f, 1f, -7.1f), CombatSurfaceType.Wood, fenceMaterial, "Wood");
-            CreateSurfaceTestPanel(root.transform, origin + new Vector3(10f, 1f, -7.1f), CombatSurfaceType.Stone, rockMaterial, "Stone");
-            CreateSurfaceTestPanel(root.transform, origin + new Vector3(12.8f, 1f, -7.1f), CombatSurfaceType.Glass, windowMaterial, "Glass");
+            runtimeLocationNames.Add("Weapon Test");
+            runtimeLocationPositions.Add(Milestone24BWeaponTestAreaBuilder.DefaultOrigin);
+#endif
         }
 
         private void PlaceTestAmmoPickup(Transform parent, LootItem[] lootPrefabs, LootKind kind, Vector3 position)

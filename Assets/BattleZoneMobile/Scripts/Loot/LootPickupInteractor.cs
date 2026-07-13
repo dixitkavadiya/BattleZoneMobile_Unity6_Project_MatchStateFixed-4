@@ -13,7 +13,7 @@ namespace BattleZoneMobile
         [SerializeField] private LayerMask lootMask = ~0;
         [SerializeField] private Text promptText;
 
-        private LootItem focusedLoot;
+        private Component focusedPickup;
 
         public void ConfigureForRuntime(Camera camera, PlayerInventory playerInventory, Text pickupPrompt, LayerMask mask)
         {
@@ -38,7 +38,7 @@ namespace BattleZoneMobile
 
         private void Update()
         {
-            focusedLoot = FindClosestLoot();
+            focusedPickup = FindClosestPickup();
             UpdatePrompt();
 
             if (WasPickupTapped(out Vector2 screenPosition))
@@ -49,10 +49,7 @@ namespace BattleZoneMobile
 
         public void PickUpFocused()
         {
-            if (focusedLoot != null)
-            {
-                focusedLoot.PickUp(inventory);
-            }
+            PickUpComponent(focusedPickup);
         }
 
         private bool WasPickupTapped(out Vector2 screenPosition)
@@ -97,10 +94,10 @@ namespace BattleZoneMobile
                 Ray ray = playerCamera.ScreenPointToRay(screenPosition);
                 if (Physics.Raycast(ray, out RaycastHit hit, 100f, lootMask, QueryTriggerInteraction.Collide))
                 {
-                    LootItem tappedLoot = hit.collider.GetComponentInParent<LootItem>();
-                    if (tappedLoot != null && Vector3.Distance(transform.position, tappedLoot.transform.position) <= pickupDistance)
+                    Component pickup = ResolvePickup(hit.collider);
+                    if (pickup != null && Vector3.Distance(transform.position, pickup.transform.position) <= pickupDistance)
                     {
-                        tappedLoot.PickUp(inventory);
+                        PickUpComponent(pickup);
                         return;
                     }
                 }
@@ -109,25 +106,25 @@ namespace BattleZoneMobile
             PickUpFocused();
         }
 
-        private LootItem FindClosestLoot()
+        private Component FindClosestPickup()
         {
             Collider[] hits = Physics.OverlapSphere(transform.position, pickupDistance, lootMask, QueryTriggerInteraction.Collide);
-            LootItem closest = null;
+            Component closest = null;
             float bestDistance = float.MaxValue;
 
             foreach (Collider hit in hits)
             {
-                LootItem loot = hit.GetComponentInParent<LootItem>();
-                if (loot == null)
+                Component pickup = ResolvePickup(hit);
+                if (pickup == null)
                 {
                     continue;
                 }
 
-                float distance = Vector3.Distance(transform.position, loot.transform.position);
+                float distance = Vector3.Distance(transform.position, pickup.transform.position);
                 if (distance < bestDistance && distance <= pickupDistance + scanRadius)
                 {
                     bestDistance = distance;
-                    closest = loot;
+                    closest = pickup;
                 }
             }
 
@@ -141,10 +138,42 @@ namespace BattleZoneMobile
                 return;
             }
 
-            promptText.enabled = focusedLoot != null;
-            if (focusedLoot != null)
+            promptText.enabled = focusedPickup != null;
+            if (focusedPickup is AdvancedWeaponPickup weaponPickup)
             {
-                promptText.text = $"Tap to pick up [{focusedLoot.RarityLabel}] {focusedLoot.DisplayName}";
+                promptText.text = $"Tap to pick up [{weaponPickup.RarityLabel}] {weaponPickup.DisplayName}";
+            }
+            else if (focusedPickup is LootItem loot)
+            {
+                promptText.text = $"Tap to pick up [{loot.RarityLabel}] {loot.DisplayName}";
+            }
+        }
+
+        private static Component ResolvePickup(Collider hit)
+        {
+            if (hit == null)
+            {
+                return null;
+            }
+
+            AdvancedWeaponPickup weaponPickup = hit.GetComponentInParent<AdvancedWeaponPickup>();
+            if (weaponPickup != null)
+            {
+                return weaponPickup;
+            }
+
+            return hit.GetComponentInParent<LootItem>();
+        }
+
+        private void PickUpComponent(Component pickup)
+        {
+            if (pickup is AdvancedWeaponPickup weaponPickup)
+            {
+                weaponPickup.PickUp(inventory);
+            }
+            else if (pickup is LootItem loot)
+            {
+                loot.PickUp(inventory);
             }
         }
     }

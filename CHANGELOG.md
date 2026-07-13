@@ -1,5 +1,16 @@
 # BattleZone Mobile Changelog
 
+## Milestone 24B - Live Weapon Test Area and Pickups
+
+- Added `AdvancedWeaponPickup` so Milestone 24B `AdvancedWeaponData` weapons can exist as live ground loot with visible labels, collider support, pickup prompts, inventory handoff, and safe slot replacement.
+- Added `M24B Live Weapon Test Area`, positioned near the runtime PlayerSpawn area, with all 10 Milestone 24B weapons in two rows: VXR-56, ARK-74, Sentinel AR, Pulse-9, Raptor-45, Longshot DMR, Falcon SR, Breacher-12, Sidearm P9, and Hammer .50.
+- Added matching ammo pickups beside every test weapon and added static hit-zone targets with Head, Chest, Arm, and Leg `CombatHitbox` parts.
+- Added surface test panels for Metal, Wood, Stone, and Glass impact validation.
+- Added editor repair command `BattleZone Tools > Build Milestone 24B Weapon Test Area`; it opens `BZ_Main`, rebuilds/repairs the test area without duplicates, and saves the scene.
+- Added runtime fallback in Editor/development builds so `BZ_Main` creates the test area once if it is missing at startup.
+- Updated pickup interaction to support both existing `LootItem` pickups and new `AdvancedWeaponPickup` world weapons without changing movement, camera, aircraft/drop/landing, Animator placement, or the damage overlay fixes.
+- Runtime and Editor C# compile checks completed with Unity 6.5 Roslyn references with zero errors and zero warnings.
+
 ## Milestone 24B - Original Weapon Set
 
 - Added 10 original weapon `AdvancedWeaponData` assets under `Assets/BattleZoneMobile/Resources/WeaponData`: VXR-56, ARK-74, Sentinel AR, Pulse-9, Raptor-45, Longshot DMR, Falcon SR, Breacher-12, Sidearm P9, and Hammer .50.
@@ -8,7 +19,7 @@
 - Added `ModularWeaponLoadout` for primary, secondary, and pistol slots with equip, unequip, weapon switching, empty-hands fallback, pickup replacement rules, ammo validation, reload guarding, and movement-safe control locking.
 - Added `CombatWeaponRoster` resource loading for the original weapon data assets.
 - Added `WeaponVisualPlaceholder` and `WeaponVisualPlaceholderFactory` for temporary original weapon views with muzzle, shell-ejection, hand-grip, optic, muzzle, magazine, grip, pickup collider, equipped-view, and world-pickup hooks.
-- Added a runtime `M24B Weapon Test Area` with all 10 weapon placeholder views, ammo pickups, static hit-zone targets, and Metal/Wood/Stone/Glass surface panels.
+- Added the first runtime `M24B Weapon Test Area` scaffold with all 10 weapon placeholder views, ammo pickups, static hit-zone targets, and Metal/Wood/Stone/Glass surface panels.
 - Added `UIManager.SetAdvancedWeaponHud` so the modular loadout can display weapon name, icon placeholder text, ammo, reserve ammo, fire mode, reload state, and current slot without redesigning the existing HUD.
 - Kept the stable live-match `WeaponController` as the active gameplay input path for this checkpoint to avoid duplicate shots or regressions in movement, joystick, camera, aircraft/drop/landing, inventory, and HUD.
 - Added `WEAPON_BALANCE.md` with the full balance table, intended roles, fire modes, attachment slots, and placeholder limitations.

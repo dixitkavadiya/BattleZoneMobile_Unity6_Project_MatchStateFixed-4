@@ -1,5 +1,39 @@
 # BattleZone Mobile - Test Checklist
 
+## Milestone 24B - Live Weapon Test Area and Pickups
+
+Automated/static checks run in this workspace:
+
+- PASS: Runtime C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+- PASS: Editor C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+- PASS: `AdvancedWeaponPickup` supports visible weapon labels, direct pickup through `PlayerInventory`, and cleanup after pickup.
+- PASS: `LootPickupInteractor` resolves both `AdvancedWeaponPickup` and existing `LootItem` pickups through the same prompt and pickup path.
+- PASS: `PlayerInventory.AddAdvancedWeapon` equips Milestone 24B data into `ModularWeaponLoadout` and maps compatible weapons into the stable legacy `WeaponController` path for live fire/reload testing.
+- PASS: `BattleZoneRuntimeBuilder` creates `M24B Live Weapon Test Area` in Editor/development builds when the area is missing.
+- PASS: Editor menu command exists at `BattleZone Tools > Build Milestone 24B Weapon Test Area`.
+- PASS: Test area builder orders all 10 weapons in two neat rows near the PlayerSpawn area.
+- PASS: Matching ammo pickups are created beside every test weapon.
+- PASS: Static test targets contain Head, Chest, Arm, and Leg `CombatHitbox` parts.
+- PASS: The implementation did not modify `ReliablePlayerMovement`, `ThirdPersonMobileController`, `BattleRoyaleMatchFlow`, Animator placement, camera logic, aircraft/drop/landing ownership, or damage overlay logic.
+
+Required manual Unity Play Mode checks:
+
+1. Open `Assets/BattleZoneMobile/Scenes/BZ_Main.unity`.
+2. Optional scene bake: run `BattleZone Tools > Build Milestone 24B Weapon Test Area` and confirm the scene saves.
+3. Press Play and confirm no red Console errors.
+4. Confirm `M24B Live Weapon Test Area` exists near the PlayerSpawn area.
+5. Confirm VXR-56, ARK-74, Sentinel AR, Pulse-9, Raptor-45, Longshot DMR, Falcon SR, Breacher-12, Sidearm P9, and Hammer .50 are visible on the ground in two rows.
+6. Confirm every weapon has a label above it and does not fall through the ground pad/terrain.
+7. Confirm matching ammo pickups sit beside each weapon.
+8. Walk to a weapon and confirm the pickup prompt appears.
+9. Pick up a weapon and confirm it equips without breaking movement.
+10. Pick up the matching ammo and confirm ammo/reload values remain valid.
+11. Fire, reload, and switch weapons.
+12. Pick up another weapon for an occupied slot and confirm replacement is safe.
+13. Shoot the test targets and confirm Head, Chest, Arm, and Leg hit zones can receive hits.
+14. Confirm Metal, Wood, Stone, and Glass surface panels still exist for impact testing.
+15. Confirm WASD, mobile joystick, sprint, jump, crouch, prone, camera, aircraft/freefall/landing, and red overlay fixes do not regress.
+
 ## Milestone 24B - Original Weapon Set
 
 Automated/static checks run in this workspace:
@@ -13,14 +47,14 @@ Automated/static checks run in this workspace:
 - PASS: `ModularWeaponLoadout` supports primary, secondary, and pistol slots, equip/unequip, weapon switching, empty-hands fallback, and pickup replacement rules.
 - PASS: Modular ammo paths clamp magazine/reserve ammo and prevent negative ammo.
 - PASS: `UIManager.SetAdvancedWeaponHud` can show weapon name, icon placeholder, ammo, reserve ammo, fire mode, reload state, and slot.
-- PASS: Runtime builder creates `M24B Weapon Test Area` with all 10 placeholder weapon views, ammo pickups, hit-zone targets, and Metal/Wood/Stone/Glass surface panels.
+- PASS: Runtime builder creates the Milestone 24B weapon test scaffold with all 10 placeholder weapon views, ammo pickups, hit-zone targets, and Metal/Wood/Stone/Glass surface panels.
 - PASS: Existing live-match fire/reload controls remain wired to the stable `WeaponController`, avoiding duplicate modular/legacy shots during this checkpoint.
 
 Required manual Unity Play Mode checks:
 
 1. Open `Assets/BattleZoneMobile/Scenes/BZ_Main.unity`.
 2. Press Play and confirm no red Console errors.
-3. Confirm `M24B Weapon Test Area` exists in the Hierarchy.
+3. Confirm `M24B Live Weapon Test Area` exists in the Hierarchy.
 4. Confirm all 10 weapon placeholder views exist under the test area.
 5. Confirm the test area includes Light, Medium, Heavy, and Shell ammo pickups.
 6. Confirm hit-zone targets contain Head, Chest, Arm, and Leg `CombatHitbox` parts.

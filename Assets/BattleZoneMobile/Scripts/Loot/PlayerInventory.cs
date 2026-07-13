@@ -17,6 +17,7 @@ namespace BattleZoneMobile
     public class PlayerInventory : MonoBehaviour
     {
         [SerializeField] private WeaponController weaponController;
+        [SerializeField] private ModularWeaponLoadout modularWeaponLoadout;
         [SerializeField] private Health playerHealth;
         [SerializeField] private PlayerEquipment equipment;
         [SerializeField] private int medkitHealAmount = 50;
@@ -43,7 +44,13 @@ namespace BattleZoneMobile
 
         public void ConfigureForRuntime(WeaponController weapons, Health health)
         {
+            ConfigureForRuntime(weapons, health, null);
+        }
+
+        public void ConfigureForRuntime(WeaponController weapons, Health health, ModularWeaponLoadout loadout)
+        {
             weaponController = weapons;
+            modularWeaponLoadout = loadout;
             playerHealth = health;
             equipment = GetComponent<PlayerEquipment>();
         }
@@ -59,6 +66,11 @@ namespace BattleZoneMobile
             if (playerHealth == null)
             {
                 playerHealth = GetComponent<Health>();
+            }
+
+            if (modularWeaponLoadout == null)
+            {
+                modularWeaponLoadout = GetComponent<ModularWeaponLoadout>();
             }
 
             if (equipment == null)
@@ -155,6 +167,24 @@ namespace BattleZoneMobile
             RaiseChanged();
         }
 
+        public void AddAdvancedWeapon(AdvancedWeaponData weaponData, int reserveAmmoBonus)
+        {
+            if (weaponData == null)
+            {
+                return;
+            }
+
+            modularWeaponLoadout?.TryEquipPickup(weaponData, true);
+            if (TryMapLegacyWeaponSlot(weaponData, out WeaponSlot legacySlot))
+            {
+                weaponController?.UnlockWeapon(legacySlot, Mathf.Max(0, reserveAmmoBonus));
+            }
+
+            lastPickupText = $"Picked up {weaponData.DisplayName}";
+            RuntimeAudioBank.Instance?.PlayPickup(transform.position);
+            RaiseChanged();
+        }
+
         public void UseMedkit()
         {
             if (medkits > 0 && TryHeal(medkitHealAmount))
@@ -207,6 +237,37 @@ namespace BattleZoneMobile
             weaponController?.UnlockWeapon(slot, 0);
             lastPickupText = message;
             RuntimeAudioBank.Instance?.PlayPickup(transform.position);
+        }
+
+        private static bool TryMapLegacyWeaponSlot(AdvancedWeaponData weaponData, out WeaponSlot slot)
+        {
+            slot = WeaponSlot.Pistol;
+            if (weaponData == null)
+            {
+                return false;
+            }
+
+            switch (weaponData.WeaponType)
+            {
+                case CombatWeaponType.AssaultRifle:
+                    slot = WeaponSlot.AssaultRifle;
+                    return true;
+                case CombatWeaponType.SMG:
+                    slot = WeaponSlot.SMG;
+                    return true;
+                case CombatWeaponType.Sniper:
+                case CombatWeaponType.DMR:
+                    slot = WeaponSlot.Sniper;
+                    return true;
+                case CombatWeaponType.Shotgun:
+                    slot = WeaponSlot.Shotgun;
+                    return true;
+                case CombatWeaponType.Pistol:
+                    slot = WeaponSlot.Pistol;
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private void AddAmmo(AmmoKind ammoKind, int amount, int costPerRound, string label)

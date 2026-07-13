@@ -1,5 +1,42 @@
 # BattleZone Mobile - Regression Report
 
+## Milestone 24B Live Weapon Test Area and Pickups - 2026-07-13
+
+Scope:
+
+- Current project only: `BattleZoneMobile_Unity6_Project_MatchStateFixed-4`.
+- Add the missing live world pickup test area for the existing Milestone 24B weapon definitions.
+- Do not modify stable movement, joystick, camera, Animator placement, aircraft/freefall/landing, startup gravity ownership, or red overlay fixes.
+
+Root issue:
+
+- Milestone 24B weapon definitions and fire/reload code existed, but `BZ_Main` had no reliable live ground-pickup area where the 10 weapon definitions could be seen, approached, picked up, equipped, and tested.
+
+Fix applied:
+
+- Added `AdvancedWeaponPickup` for physical 24B weapon pickups with name labels and `AdvancedWeaponData` references.
+- Updated `LootPickupInteractor` to support both existing `LootItem` pickups and new advanced weapon pickups through the same prompt/tap/focused-pickup path.
+- Updated `PlayerInventory` so advanced weapon pickups equip into `ModularWeaponLoadout` and also unlock the compatible stable legacy `WeaponController` slot for immediate fire/reload testing.
+- Added `Milestone24BWeaponTestAreaBuilder` to create `M24B Live Weapon Test Area` near PlayerSpawn with two rows of all 10 weapons, adjacent ammo pickups, body-zone targets, and surface panels.
+- Added editor menu command `BattleZone Tools > Build Milestone 24B Weapon Test Area` to rebuild/repair the area and save `BZ_Main`.
+- Added Editor/development-build runtime fallback so `BZ_Main` creates the area once if it is missing at startup.
+
+Regression audit results:
+
+- PASS: `ReliablePlayerMovement` was not modified.
+- PASS: `ThirdPersonMobileController` was not modified.
+- PASS: `BattleRoyaleMatchFlow` was not modified.
+- PASS: Animator placement and root-motion behavior were not modified.
+- PASS: Damage overlay scripts were not modified.
+- PASS: Existing camera, aircraft/drop/landing, weapon fire/reload behavior, vehicle, bot, zone, and match-flow code paths were not redesigned.
+- PASS: Runtime C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+- PASS: Editor C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+
+Unity Editor verification:
+
+- NOT RUN: Live Unity Play Mode remains blocked in this environment by Unity Hub/license activation.
+- Required manual pickup verification is listed in `TEST_CHECKLIST.md`.
+
 ## Milestone 24B Original Weapon Set - 2026-07-12
 
 Scope:
