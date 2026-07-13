@@ -225,6 +225,47 @@ Regression audit results:
 - PASS: Visual child `Animator.applyRootMotion` is explicitly false.
 - PASS: `DamageFlash` remains inactive by default and direct-damage-only; safe-zone damage does not trigger the full-screen flash.
 - PASS: Large `ReliablePlayerMovement` debug overlay is disabled by default and is available through the inspector toggle `Show Debug Overlay`.
+# Milestone 24D Loot, Inventory and Attachments - 2026-07-13
+
+Base:
+
+- Continued from `BattleZoneMobile_Unity6_Project_MatchStateFixed-4`.
+- Did not rebuild the project.
+- Did not redesign the stable movement, joystick, Animator placement, aircraft/freefall/landing, red overlay, weapon pickup, recoil, reload, hit feedback, weapon switching, or backpack pickup paths.
+
+Changes applied:
+
+- Added data-driven `InventoryItemData` and `WeaponAttachmentData` ScriptableObjects.
+- Expanded `LootItem` to carry inventory data references, item tier, attachment data, rarity, quantity, and backpack cost.
+- Changed pickup consumption so rejected items remain on the ground instead of being disabled before inventory acceptance.
+- Replaced the old instant-use `PlayerInventory` internals with capacity-aware backpack tiers, timed healing, throwables, stored attachments, and armor/helmet replacement support.
+- Added helmet durability loss on headshot mitigation and vest durability reporting through current armor.
+- Added attachment application to `WeaponController` using `WeaponAttachmentProfile`, preserving existing fire/reload/recoil/hit code paths.
+- Added inventory desktop/mobile controls through `InventoryInputBridge`, inventory action buttons, and HUD use-progress feedback.
+- Added `M24D Loot Inventory Test Area` in Editor/development builds for all requested loot and attachment pickup types.
+- Fixed a pre-existing `CombatProjectile` layer-mask conditional that Roslyn flags by using `context.hitMask.value` explicitly.
+
+Regression protections:
+
+- `ReliablePlayerMovement` remains the only Combat ground movement owner.
+- `BattleRoyaleMatchFlow` remains the authoritative pose owner for Aircraft/Freefall/Parachute/Landing.
+- Animator remains on `LowPolyOriginalHumanoid`; Player root remains non-animated.
+- Damage flash behavior was not modified.
+- Fire/reload/recoil/hit feedback continue through the existing `WeaponController`.
+- Pickup with `E`, `F`, prompt click, and mobile `PICKUP` continue through the same focused pickup path.
+
+Verification performed:
+
+- PASS: Runtime C# scripts compiled with Unity `6000.5.3f1` managed references and zero compiler errors.
+- PASS: Static code audit confirmed no movement ownership rewrite.
+- PASS: Static code audit confirmed new test area is additive and guarded by Editor/development build symbols.
+- NOT RUN: Unity Play Mode could not be launched here because this machine still requires Unity Hub/license activation.
+
+Remaining risk:
+
+- Manual Unity Play Mode verification is required for live pickup/equip/use/drop flows, because Editor execution is blocked by licensing in this environment.
+- Attachment icons, loot meshes, healing sounds, and throwable gameplay are still original runtime placeholders rather than final authored assets.
+
 - PASS: `BotManager.explicitSpawnPoints` warning is fixed by initializing the serialized array and adding safe runtime spawn-point discovery when it is empty.
 - PASS: C# runtime script compile check completed with zero errors and zero warnings.
 

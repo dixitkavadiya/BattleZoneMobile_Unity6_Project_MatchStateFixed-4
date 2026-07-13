@@ -195,6 +195,49 @@ Required manual Unity Play Mode checks:
 
 ## Stable Post-Recovery Gameplay Checkpoint - 2026-07-12
 
+# Milestone 24D - Loot, Inventory and Attachments
+
+Automated/static checks run in this workspace:
+
+- PASS: Runtime C# scripts compiled with Unity `6000.5.3f1` managed references and zero compiler errors.
+- PASS: `CombatProjectile` layer-mask conditional was made explicit so Roslyn and Unity agree on the projectile raycast mask type.
+- PASS: Static audit confirms `ReliablePlayerMovement`, `ThirdPersonMobileController` movement ownership, Animator placement, and BattleRoyaleMatchFlow pose ownership were not redesigned.
+- PASS: Static audit confirms pickup consumption now requires inventory acceptance before disabling/destroying ground loot.
+- PASS: Static audit confirms `M24D Loot Inventory Test Area` is created only in Editor/development builds and does not replace normal match flow.
+- PASS: Static audit confirms `ProjectSettings/GraphicsSettings.asset` remains an unrelated pre-existing workspace change and is not part of this milestone.
+
+Required Unity Play Mode checks:
+
+1. Open `Assets/BattleZoneMobile/Scenes/BZ_Main.unity`.
+2. Press Play and start a match.
+3. Confirm movement works before opening inventory and after closing it.
+4. Confirm joystick movement still works.
+5. Confirm camera look/ADS still work after opening and closing inventory.
+6. Approach `M24D Loot Inventory Test Area`.
+7. Pick up Tier 1, Tier 2, and Tier 3 backpacks and confirm backpack capacity increases.
+8. Fill inventory with ammo/healing/attachments and confirm full backpack prevents extra pickups without deleting rejected ground loot.
+9. Pick up Tier 1, Tier 2, and Tier 3 helmets and vests and confirm replacement rules keep better gear.
+10. Take armor/headshot damage and confirm vest/helmet durability values update in inventory.
+11. Pick up medkit, bandage, and energy item.
+12. Use a healing item and confirm the HUD progress indicator appears and completes.
+13. Confirm duplicate healing use cannot start while one item is already in progress.
+14. Confirm healing respects health caps, especially bandage cap.
+15. Pick up Red Dot, Holo, 2x, 4x, 6x, 8x, Compensator, Flash Hider, Suppressor, Extended, Quickdraw, Extended Quickdraw, Vertical Grip, Angled Grip, Lightweight Grip, Stock, and Laser.
+16. Open inventory with `I`.
+17. Close inventory with `Escape`.
+18. Use the mobile inventory `USE`, `EQUIP`, and `DROP` buttons.
+19. Right click while inventory is open and confirm it equips a compatible attachment or uses a healing item.
+20. Confirm incompatible attachments stay stored and display a pickup/inventory message.
+21. Confirm magazine attachments update current magazine capacity safely without negative ammo.
+22. Confirm suppressor attachment routes to suppressed-fire audio.
+23. Confirm weapon pickup with `E` still works.
+24. Confirm fire, recoil, reload, hit feedback, and weapon switching still work after attachments are equipped.
+25. Confirm grenades and smoke grenades can be picked up, counted, and dropped from inventory.
+26. Confirm no duplicate pickup can be produced by tapping/clicking pickup rapidly.
+27. Confirm aircraft, freefall, parachute, and landing still work.
+28. Confirm no permanent red overlay appears.
+29. Confirm no red Console errors.
+
 Automated/static checks run in this workspace:
 
 - PASS: `git diff --check` completed with no whitespace or patch-format issues.

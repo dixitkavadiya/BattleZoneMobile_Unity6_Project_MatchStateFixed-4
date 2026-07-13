@@ -4,6 +4,41 @@ Milestone 24B adds the first original weapon roster using `AdvancedWeaponData` S
 
 All names, values, silhouettes, and hooks are original placeholders for BattleZone Mobile. They are not copied from BGMI/PUBG weapons, skins, sounds, recoil tables, UI, or branding.
 
+## Milestone 24D Attachment Balance
+
+The live-match `WeaponController` now accepts data-driven `WeaponAttachmentData` pickups through the inventory. Attachment compatibility is declared per attachment using compatible `WeaponSlot` arrays and weapon support flags; pickup logic does not hardcode individual attachment behavior.
+
+| Attachment | Slot | Rarity | Compatible Weapons | Primary Modifier |
+| --- | --- | --- | --- | --- |
+| Red Dot | Optic | Common | All firearms | Slight spread reduction |
+| Holo Sight | Optic | Common | All firearms | Slight ADS stability |
+| 2x Scope | Optic | Uncommon | Rifle, SMG, Sniper | Mid zoom accuracy helper |
+| 4x Scope | Optic | Rare | Rifle, Sniper | Long-range spread reduction |
+| 6x Scope | Optic | Epic | Rifle, Sniper | Strong long-range spread reduction |
+| 8x Scope | Optic | Epic | Sniper | Dedicated sniper optic |
+| Compensator | Muzzle | Rare | Rifle, SMG | Strong recoil reduction |
+| Flash Hider | Muzzle | Uncommon | All firearms | Moderate recoil/spread cleanup |
+| Suppressor | Muzzle | Epic | All firearms | Suppressed-fire audio with small handling tradeoff |
+| Extended Mag | Magazine | Rare | All firearms | Larger magazine |
+| Quickdraw Mag | Magazine | Uncommon | All firearms | Faster reload |
+| Extended Quickdraw | Magazine | Epic | All firearms | Larger magazine and faster reload |
+| Vertical Grip | Grip | Uncommon | Rifle, SMG | Vertical recoil control |
+| Angled Grip | Grip | Rare | Rifle, SMG | Spread and handling control |
+| Lightweight Grip | Grip | Rare | Rifle, SMG, Sniper | ADS spread stability |
+| Tactical Stock | Stock | Rare | Rifle, SMG | Recoil/reload smoothing |
+| Compact Laser | Laser | Uncommon | All firearms | Hip-fire spread reduction |
+
+Attachment effects currently modify the existing runtime values:
+
+- `recoilMultiplier`
+- `spreadMultiplier`
+- `reloadMultiplier`
+- `magazineMultiplier`
+- `fireRateMultiplier`
+- `suppressesFireAudio`
+
+Attachment replacement returns the old attachment to backpack storage when capacity allows; otherwise the equip action is rejected so attachments are not silently lost. Magazine replacement clamps overflow safely back into reserve ammo, and extended magazines can top up from reserve if the weapon was already full before attachment.
+
 ## Milestone 24C Runtime Gun Feel
 
 The current live-match `WeaponController` now exposes and uses per-weapon recoil and feedback values on `WeaponDefinition`:

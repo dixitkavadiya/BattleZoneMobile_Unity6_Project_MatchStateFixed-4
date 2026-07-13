@@ -90,5 +90,7 @@ namespace BattleZoneMobile
         public bool supportsMuzzle = true;
         public bool supportsMagazine = true;
         public bool supportsGrip = true;
+        public bool supportsStock = true;
+        public bool supportsLaser = true;
     }
 }

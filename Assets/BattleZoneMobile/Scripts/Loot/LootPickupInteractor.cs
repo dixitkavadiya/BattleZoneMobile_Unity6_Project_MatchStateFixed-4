@@ -209,18 +209,25 @@ namespace BattleZoneMobile
                 return;
             }
 
-            DisablePickupColliders(pickupObject);
-            pickupObject.SetActive(false);
+            bool consumed = false;
 
             if (pickup is AdvancedWeaponPickup weaponPickup)
             {
-                weaponPickup.PickUp(inventory);
+                consumed = weaponPickup.TryPickUp(inventory);
             }
             else if (pickup is LootItem loot)
             {
-                loot.PickUp(inventory);
+                consumed = loot.TryPickUp(inventory);
             }
 
+            if (!consumed)
+            {
+                UpdatePrompt();
+                return;
+            }
+
+            DisablePickupColliders(pickupObject);
+            pickupObject.SetActive(false);
             focusedPickup = null;
             UpdatePrompt();
         }

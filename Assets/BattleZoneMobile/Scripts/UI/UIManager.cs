@@ -30,6 +30,7 @@ namespace BattleZoneMobile
         [SerializeField] private Text matchPhaseText;
         [SerializeField] private Text flightPathText;
         [SerializeField] private Text matchSummaryText;
+        [SerializeField] private Text useProgressText;
         [SerializeField] private GameObject inventoryPanel;
         [SerializeField] private Text inventoryDetailsText;
         [SerializeField] private RectTransform crosshairRect;
@@ -63,6 +64,8 @@ namespace BattleZoneMobile
         private const float DamageFlashFadeInSeconds = 0.04f;
         private const float DamageFlashFadeOutSeconds = 0.21f;
 
+        public bool InventoryVisible => inventoryPanel != null && inventoryPanel.activeSelf;
+
         public void ConfigureForRuntime(
             GameObject mainMenu,
             GameObject hud,
@@ -90,7 +93,8 @@ namespace BattleZoneMobile
             Text summaryText = null,
             Text phaseText = null,
             Text routeText = null,
-            RectTransform flightPathRect = null)
+            RectTransform flightPathRect = null,
+            Text useProgress = null)
         {
             mainMenuPanel = mainMenu;
             hudPanel = hud;
@@ -112,6 +116,7 @@ namespace BattleZoneMobile
             matchAnnouncementText = matchAnnouncement;
             matchPhaseText = phaseText;
             flightPathText = routeText;
+            useProgressText = useProgress;
             matchSummaryPanel = summaryPanel;
             matchSummaryText = summaryText;
             inventoryPanel = inventory;
@@ -122,6 +127,7 @@ namespace BattleZoneMobile
             crosshairCurrentSize = crosshairBaseSize;
             SetFlightPathPreview(Vector3.zero, Vector3.forward, false);
             ResetDamageFlash();
+            SetUseProgress(string.Empty, 0f, false);
         }
 
         private void Update()
@@ -145,6 +151,7 @@ namespace BattleZoneMobile
             SetPanel(inventoryPanel, false);
             SetPanel(matchSummaryPanel, false);
             ResetDamageFlash();
+            SetUseProgress(string.Empty, 0f, false);
             SetMatchPhase("MENU", "Ready");
             SetFlightPathPreview(Vector3.zero, Vector3.forward, false);
         }
@@ -158,6 +165,7 @@ namespace BattleZoneMobile
             SetPanel(inventoryPanel, false);
             SetPanel(matchSummaryPanel, false);
             ResetDamageFlash();
+            SetUseProgress(string.Empty, 0f, false);
         }
 
         public void ShowGameOver()
@@ -169,6 +177,7 @@ namespace BattleZoneMobile
             SetPanel(inventoryPanel, false);
             SetPanel(matchSummaryPanel, false);
             ResetDamageFlash();
+            SetUseProgress(string.Empty, 0f, false);
         }
 
         public void ShowVictory()
@@ -180,6 +189,7 @@ namespace BattleZoneMobile
             SetPanel(inventoryPanel, false);
             SetPanel(matchSummaryPanel, false);
             ResetDamageFlash();
+            SetUseProgress(string.Empty, 0f, false);
         }
 
         public void SetHealth(float current, float max)
@@ -357,6 +367,24 @@ namespace BattleZoneMobile
             {
                 medkitText.text = $"Pack {used}/{capacity}";
             }
+        }
+
+        public void SetUseProgress(string label, float progress01, bool visible)
+        {
+            if (useProgressText == null)
+            {
+                return;
+            }
+
+            useProgressText.enabled = visible;
+            if (!visible)
+            {
+                useProgressText.text = string.Empty;
+                return;
+            }
+
+            string safeLabel = string.IsNullOrEmpty(label) ? "Using" : label;
+            useProgressText.text = $"{safeLabel} {Mathf.RoundToInt(Mathf.Clamp01(progress01) * 100f)}%";
         }
 
         public void ToggleInventory()

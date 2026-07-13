@@ -1,5 +1,20 @@
 # BattleZone Mobile Changelog
 
+## Milestone 24D - Loot, Inventory and Attachments
+
+- Added `InventoryItemData` and `WeaponAttachmentData` ScriptableObject data models for runtime loot and attachment references.
+- Expanded ground loot to support weapons, ammo, tiered backpacks, tiered helmets, tiered vests, medkits, bandages, energy items, grenades, smoke grenades, and weapon attachments.
+- Hardened pickup consumption so items are not duplicated and are not removed from the ground when inventory rejects them.
+- Added backpack tiers with capacity limits and capacity-aware item pickup.
+- Added timed medkit, bandage, and energy item use with progress HUD feedback, duplicate-use prevention, health caps, and configurable movement cancellation rules.
+- Added helmet and vest tier replacement rules, helmet durability loss on headshots, and vest durability display through the existing armor value.
+- Added data-driven attachment compatibility and modifiers for optic, muzzle, magazine, grip, stock, and laser slots.
+- Added attachment application to the current compatible runtime weapon, including recoil, spread, magazine, reload, fire-rate, and suppressed-fire audio modifiers.
+- Added desktop inventory controls: `I` opens inventory, `Escape` closes it, and right click uses/equips while inventory is open.
+- Added mobile inventory actions: `USE`, `EQUIP`, and `DROP` buttons in the original inventory screen.
+- Added `M24D Loot Inventory Test Area` with labeled pickups for all backpack tiers, armor tiers, healing items, ammo types, throwables, and attachment types.
+- Preserved the stable movement, joystick, Animator placement, aircraft/freefall/landing, red overlay, pickup, recoil, reload, hit feedback, weapon switching, and backpack pickup paths.
+
 ## Milestone 24C - Gun Feel and Combat Feedback
 
 - Added per-weapon camera recoil values for vertical kick, horizontal kick, and recovery while preserving the existing `WeaponController` fire/reload architecture.

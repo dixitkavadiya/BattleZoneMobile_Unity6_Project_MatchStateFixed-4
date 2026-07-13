@@ -12,6 +12,7 @@ namespace BattleZoneMobile
         public string DisplayName => weaponData != null ? weaponData.DisplayName : "Unknown Weapon";
         public string RarityLabel => weaponData != null ? weaponData.Rarity.ToString() : "Common";
         public int ReserveAmmoBonus => reserveAmmoBonus;
+        private bool pickupConsumed;
 
         public void Configure(AdvancedWeaponData data, int reserveBonus, TextMesh label)
         {
@@ -36,15 +37,22 @@ namespace BattleZoneMobile
             }
         }
 
-        public void PickUp(PlayerInventory inventory)
+        public bool TryPickUp(PlayerInventory inventory)
         {
-            if (inventory == null || weaponData == null)
+            if (inventory == null || weaponData == null || pickupConsumed)
             {
-                return;
+                return false;
             }
 
+            pickupConsumed = true;
             inventory.AddAdvancedWeapon(weaponData, reserveAmmoBonus);
             Destroy(gameObject);
+            return true;
+        }
+
+        public void PickUp(PlayerInventory inventory)
+        {
+            TryPickUp(inventory);
         }
 
         private void RefreshLabel()

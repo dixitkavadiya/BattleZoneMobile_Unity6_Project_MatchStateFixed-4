@@ -89,6 +89,7 @@ namespace BattleZoneMobile
         public bool IsReloading => reloadRoutine != null;
         public bool IsSwitching => switchRoutine != null;
         public bool ControlsEnabled => controlsEnabled;
+        public WeaponAttachmentData LastReplacedAttachment { get; private set; }
 
         public void ConfigureForRuntime(
             Camera camera,
@@ -264,6 +265,107 @@ namespace BattleZoneMobile
             }
 
             return names.Count == 0 ? "Weapons: None" : $"Weapons: {string.Join(", ", names)}";
+        }
+
+        public bool TryAttachAttachment(WeaponAttachmentData attachment, out string message)
+        {
+            LastReplacedAttachment = null;
+            if (attachment == null)
+            {
+                message = "No attachment selected";
+                return false;
+            }
+
+            WeaponRuntimeState target = FindAttachmentTarget(attachment);
+            if (target == null || target.definition == null)
+            {
+                message = $"No compatible weapon for {attachment.DisplayName}";
+                return false;
+            }
+
+            if (target.attachments == null)
+            {
+                target.attachments = WeaponAttachmentProfile.CreateDefault(target.definition);
+            }
+
+            int oldMagazineSize = GetMagazineSize(target);
+            int oldMagazineAmmo = target.magazineAmmo;
+            if (!target.attachments.TryAttach(target.definition, attachment, out WeaponAttachmentData replaced, out message))
+            {
+                return false;
+            }
+
+            LastReplacedAttachment = replaced;
+            int newMagazineSize = GetMagazineSize(target);
+            if (target.magazineAmmo > newMagazineSize)
+            {
+                int overflow = target.magazineAmmo - newMagazineSize;
+                target.magazineAmmo = newMagazineSize;
+                target.reserveAmmo += overflow;
+            }
+            else if (newMagazineSize > oldMagazineSize && oldMagazineAmmo == oldMagazineSize && target.reserveAmmo > 0)
+            {
+                int needed = newMagazineSize - target.magazineAmmo;
+                int loaded = Mathf.Min(needed, target.reserveAmmo);
+                target.magazineAmmo += loaded;
+                target.reserveAmmo -= loaded;
+            }
+
+            message = $"{message} on {target.definition.displayName}";
+            if (target == currentWeapon)
+            {
+                RaiseWeaponChanged();
+            }
+            else
+            {
+                RaiseAmmoChanged();
+            }
+
+            return true;
+        }
+
+        public WeaponAttachmentData GetPotentialReplacementAttachment(WeaponAttachmentData attachment)
+        {
+            WeaponRuntimeState target = FindAttachmentTarget(attachment);
+            return target != null && target.attachments != null && attachment != null
+                ? target.attachments.GetAttachment(attachment.Slot)
+                : null;
+        }
+
+        public bool TryDetachAttachment(WeaponAttachmentSlot slot, out WeaponAttachmentData detached, out string message)
+        {
+            detached = null;
+            if (currentWeapon == null || currentWeapon.definition == null || currentWeapon.attachments == null)
+            {
+                message = "No weapon selected";
+                return false;
+            }
+
+            if (!currentWeapon.attachments.TryDetach(currentWeapon.definition, slot, out detached, out message))
+            {
+                return false;
+            }
+
+            int magazineSize = GetMagazineSize(currentWeapon);
+            if (currentWeapon.magazineAmmo > magazineSize)
+            {
+                int overflow = currentWeapon.magazineAmmo - magazineSize;
+                currentWeapon.magazineAmmo = magazineSize;
+                currentWeapon.reserveAmmo += overflow;
+            }
+
+            RaiseWeaponChanged();
+            return true;
+        }
+
+        public string BuildAttachmentSummary()
+        {
+            if (currentWeapon == null || currentWeapon.definition == null || currentWeapon.attachments == null)
+            {
+                return "Attachments: None";
+            }
+
+            return currentWeapon.attachments.BuildDetailedLabel();
         }
 
         public void ResetWeapons()
@@ -727,7 +829,8 @@ namespace BattleZoneMobile
                 return;
             }
 
-            RuntimeAudioBank.Instance?.PlayWeaponFire(definition != null ? definition.slot : WeaponSlot.Pistol, position, false);
+            bool suppressed = currentWeapon != null && currentWeapon.attachments != null && currentWeapon.attachments.SuppressesFireAudio;
+            RuntimeAudioBank.Instance?.PlayWeaponFire(definition != null ? definition.slot : WeaponSlot.Pistol, position, suppressed);
         }
 
         private void PlayDryFireAudio(WeaponDefinition definition)
@@ -876,6 +979,30 @@ namespace BattleZoneMobile
             recoilReceiver?.SetAimFieldOfView(currentWeapon.definition.adsFieldOfView);
             recoilReceiver?.SetAimSway(currentWeapon.definition.aimSway, currentWeapon.definition.scopedBreathingSway);
             RaiseAmmoChanged();
+        }
+
+        private WeaponRuntimeState FindAttachmentTarget(WeaponAttachmentData attachment)
+        {
+            if (attachment == null)
+            {
+                return null;
+            }
+
+            if (currentWeapon != null && currentWeapon.definition != null && currentWeapon.unlocked && attachment.IsCompatible(currentWeapon.definition))
+            {
+                return currentWeapon;
+            }
+
+            for (int i = 0; i < weapons.Count; i++)
+            {
+                WeaponRuntimeState candidate = weapons[i];
+                if (candidate != null && candidate.definition != null && candidate.unlocked && attachment.IsCompatible(candidate.definition))
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
         }
 
         private void RaiseAmmoChanged()

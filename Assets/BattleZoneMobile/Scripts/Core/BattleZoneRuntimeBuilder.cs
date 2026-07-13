@@ -120,7 +120,8 @@ namespace BattleZoneMobile
             AdvancedWeaponData[] weaponRoster = CombatWeaponRoster.LoadAll();
             PlayerRefs playerRefs = BuildPlayer(mainCamera, uiRefs, weaponRoster);
             BotAI botPrefab = BuildBotTemplate();
-            LootItem[] lootPrefabs = BuildLootTemplates();
+            WeaponAttachmentData[] attachmentCatalog = BuildAttachmentCatalog();
+            LootItem[] lootPrefabs = BuildLootTemplates(attachmentCatalog);
 
             SafeZoneController zone = BuildSafeZone(playerRefs.Transform, playerRefs.Health);
             LootSpawner lootSpawner = BuildLootSpawner(lootPrefabs);
@@ -128,6 +129,7 @@ namespace BattleZoneMobile
             BuildVehicles(uiRefs);
             BuildWeaponTestArea(weaponRoster, lootPrefabs);
             BuildGunFeelTestArea();
+            BuildLootInventoryTestArea(lootPrefabs);
             BattleRoyaleMatchFlow matchFlow = BuildMatchFlow(playerRefs, uiRefs, lootPrefabs, botManager);
 
             GameObject managerObject = new GameObject("GameManager");
@@ -4001,7 +4003,13 @@ namespace BattleZoneMobile
             CreateInventorySlot("InventoryDragSlotOptic", inventoryPanel.transform, font, "Optic", new Vector2(460f, 108f), 3);
             CreateInventorySlot("InventoryDragSlotMuzzle", inventoryPanel.transform, font, "Muzzle", new Vector2(460f, 22f), 4);
             CreateInventorySlot("InventoryDragSlotMagazine", inventoryPanel.transform, font, "Magazine", new Vector2(460f, -64f), 5);
+            CreateInventorySlot("InventoryDragSlotVest", inventoryPanel.transform, font, "Vest", new Vector2(-460f, -150f), 6);
+            CreateInventorySlot("InventoryDragSlotHelmet", inventoryPanel.transform, font, "Helmet", new Vector2(460f, -150f), 7);
+            Button useItemButton = CreateButton("InventoryUseButton", inventoryPanel.transform, font, "USE", new Vector2(-300f, -235f), new Vector2(190f, 72f), new Color(0.18f, 0.42f, 0.28f));
+            Button equipAttachmentButton = CreateButton("InventoryEquipButton", inventoryPanel.transform, font, "EQUIP", new Vector2(-100f, -235f), new Vector2(190f, 72f), new Color(0.16f, 0.34f, 0.46f));
+            Button dropItemButton = CreateButton("InventoryDropButton", inventoryPanel.transform, font, "DROP", new Vector2(100f, -235f), new Vector2(190f, 72f), new Color(0.46f, 0.24f, 0.16f));
             Button closeInventoryButton = CreateButton("CloseInventoryButton", inventoryPanel.transform, font, "CLOSE", new Vector2(0f, -235f), new Vector2(260f, 72f), new Color(0.16f, 0.28f, 0.42f));
+            closeInventoryButton.GetComponent<RectTransform>().anchoredPosition = new Vector2(330f, -235f);
 
             GameObject lookAreaObject = CreateUIObject("RightLookArea", hudPanel.transform, new Vector2(0f, 0f), new Vector2(1920f, 1080f));
             Image lookAreaImage = lookAreaObject.AddComponent<Image>();
@@ -4124,6 +4132,9 @@ namespace BattleZoneMobile
             Text pickupMessage = CreateText("PickupMessage", hudPanel.transform, font, "", 28, TextAnchor.MiddleCenter, new Vector2(0f, -230f), new Vector2(720f, 50f));
             pickupMessage.color = new Color(0.88f, 1f, 0.76f);
             pickupMessage.enabled = false;
+            Text useProgressText = CreateText("UseProgressText", hudPanel.transform, font, "", 26, TextAnchor.MiddleCenter, new Vector2(0f, -176f), new Vector2(520f, 46f));
+            useProgressText.color = new Color(0.72f, 1f, 0.86f);
+            useProgressText.enabled = false;
             Text developerText = CreateText("DeveloperTestPanel", hudPanel.transform, font, "", 17, TextAnchor.MiddleLeft, new Vector2(-400f, -492f), new Vector2(1040f, 84f));
             developerText.color = new Color(0.74f, 1f, 0.82f, 0.88f);
             RuntimeDeveloperPanel developerPanel = developerText.gameObject.AddComponent<RuntimeDeveloperPanel>();
@@ -4181,7 +4192,8 @@ namespace BattleZoneMobile
                 matchSummaryText,
                 matchPhaseText,
                 flightPathText,
-                minimapFlightPath.rectTransform);
+                minimapFlightPath.rectTransform,
+                useProgressText);
 
             return new RuntimeUIRefs
             {
@@ -4209,6 +4221,9 @@ namespace BattleZoneMobile
                 ThrottleButton = throttleButton,
                 BrakeButton = brakeButton,
                 InventoryPanel = inventoryPanel,
+                UseItemButton = useItemButton,
+                EquipAttachmentButton = equipAttachmentButton,
+                DropItemButton = dropItemButton,
                 PausePanel = pausePanel,
                 SettingsPanel = settingsPanel,
                 PauseButton = pauseButton,
@@ -4281,6 +4296,7 @@ namespace BattleZoneMobile
             CombatDebugWindow combatDebug = player.AddComponent<CombatDebugWindow>();
             ModularWeaponLoadout modularLoadout = player.AddComponent<ModularWeaponLoadout>();
             PlayerInventory inventory = player.AddComponent<PlayerInventory>();
+            InventoryInputBridge inventoryInput = player.AddComponent<InventoryInputBridge>();
             LootPickupInteractor pickup = player.AddComponent<LootPickupInteractor>();
             VehicleInteractor vehicleInteractor = player.AddComponent<VehicleInteractor>();
             HumanoidPlaceholderAnimator placeholderAnimator = BuildHumanoidVisual(player.transform, muzzleObject.transform, health);
@@ -4314,6 +4330,7 @@ namespace BattleZoneMobile
             combatDebug.Configure(weapons, modularLoadout, combatRecoil, health);
             animationEventBridge?.Configure(weapons, null);
             inventory.ConfigureForRuntime(weapons, health, modularLoadout);
+            inventoryInput.Configure(uiRefs.UIManager, inventory);
             pickup.ConfigureForRuntime(mainCamera, inventory, uiRefs.PickupPrompt, uiRefs.PickupButton, lootMask);
             vehicleInteractor.ConfigureForRuntime(controller, weapons, uiRefs.VehiclePrompt);
             uiRefs.HudTelemetry.Configure(player.transform, mainCamera, uiRefs.CompassText, uiRefs.MinimapArrow, uiRefs.MinimapZoneRing, uiRefs.MinimapLabel, uiRefs.MinimapNextZoneRing);
@@ -4324,6 +4341,7 @@ namespace BattleZoneMobile
             weapons.onKillConfirmed.AddListener(message => uiRefs.UIManager.AddKillFeed(message));
             health.onDamageTaken.AddListener((amount, hitPoint, hitNormal, source) => placeholderAnimator.TriggerHit(amount));
             health.onDied.AddListener(_ => placeholderAnimator.TriggerDeath());
+            inventory.onHealingProgress.AddListener(uiRefs.UIManager.SetUseProgress);
 
             return new PlayerRefs
             {
@@ -4897,9 +4915,57 @@ namespace BattleZoneMobile
             return part.transform;
         }
 
-        private LootItem[] BuildLootTemplates()
+        private WeaponAttachmentData[] BuildAttachmentCatalog()
         {
+            WeaponSlot[] primaryWeapons = { WeaponSlot.AssaultRifle, WeaponSlot.SMG, WeaponSlot.Sniper };
+            WeaponSlot[] riflesAndSmg = { WeaponSlot.AssaultRifle, WeaponSlot.SMG };
+            WeaponSlot[] precisionWeapons = { WeaponSlot.AssaultRifle, WeaponSlot.Sniper };
+            WeaponSlot[] allFirearms = { WeaponSlot.AssaultRifle, WeaponSlot.SMG, WeaponSlot.Sniper, WeaponSlot.Shotgun, WeaponSlot.Pistol };
             return new[]
+            {
+                CreateAttachmentData("optic_red_dot", "Red Dot", WeaponAttachmentSlot.Optic, LootRarity.Common, 3, allFirearms, 0.98f, 0.92f, 1f, 1f, 1f, false),
+                CreateAttachmentData("optic_holo", "Holo Sight", WeaponAttachmentSlot.Optic, LootRarity.Common, 3, allFirearms, 0.96f, 0.9f, 1f, 1f, 1f, false),
+                CreateAttachmentData("optic_2x", "2x Scope", WeaponAttachmentSlot.Optic, LootRarity.Uncommon, 4, primaryWeapons, 0.95f, 0.86f, 1f, 1f, 1f, false),
+                CreateAttachmentData("optic_4x", "4x Scope", WeaponAttachmentSlot.Optic, LootRarity.Rare, 5, precisionWeapons, 0.94f, 0.8f, 1f, 1f, 1f, false),
+                CreateAttachmentData("optic_6x", "6x Scope", WeaponAttachmentSlot.Optic, LootRarity.Epic, 6, precisionWeapons, 0.92f, 0.74f, 1f, 1f, 1f, false),
+                CreateAttachmentData("optic_8x", "8x Scope", WeaponAttachmentSlot.Optic, LootRarity.Epic, 7, new[] { WeaponSlot.Sniper }, 0.9f, 0.68f, 1f, 1f, 1f, false),
+                CreateAttachmentData("muzzle_compensator", "Compensator", WeaponAttachmentSlot.Muzzle, LootRarity.Rare, 5, riflesAndSmg, 0.74f, 0.92f, 1f, 1f, 1f, false),
+                CreateAttachmentData("muzzle_flash_hider", "Flash Hider", WeaponAttachmentSlot.Muzzle, LootRarity.Uncommon, 4, allFirearms, 0.88f, 0.95f, 1f, 1f, 1f, false),
+                CreateAttachmentData("muzzle_suppressor", "Suppressor", WeaponAttachmentSlot.Muzzle, LootRarity.Epic, 6, allFirearms, 0.94f, 0.94f, 1f, 1f, 1f, true),
+                CreateAttachmentData("mag_extended", "Extended Mag", WeaponAttachmentSlot.Magazine, LootRarity.Rare, 5, allFirearms, 1.02f, 1f, 1f, 1.28f, 1f, false),
+                CreateAttachmentData("mag_quickdraw", "Quickdraw Mag", WeaponAttachmentSlot.Magazine, LootRarity.Uncommon, 4, allFirearms, 1f, 1f, 0.82f, 1f, 1f, false),
+                CreateAttachmentData("mag_extended_quickdraw", "Extended Quickdraw", WeaponAttachmentSlot.Magazine, LootRarity.Epic, 7, allFirearms, 1f, 1f, 0.86f, 1.22f, 1f, false),
+                CreateAttachmentData("grip_vertical", "Vertical Grip", WeaponAttachmentSlot.Grip, LootRarity.Uncommon, 4, riflesAndSmg, 0.78f, 0.96f, 1f, 1f, 1f, false),
+                CreateAttachmentData("grip_angled", "Angled Grip", WeaponAttachmentSlot.Grip, LootRarity.Rare, 4, riflesAndSmg, 0.86f, 0.84f, 1f, 1f, 1.01f, false),
+                CreateAttachmentData("grip_lightweight", "Lightweight Grip", WeaponAttachmentSlot.Grip, LootRarity.Rare, 4, primaryWeapons, 0.92f, 0.78f, 0.98f, 1f, 1f, false),
+                CreateAttachmentData("stock_tactical", "Tactical Stock", WeaponAttachmentSlot.Stock, LootRarity.Rare, 5, riflesAndSmg, 0.82f, 0.9f, 0.96f, 1f, 1f, false),
+                CreateAttachmentData("laser_compact", "Compact Laser", WeaponAttachmentSlot.Laser, LootRarity.Uncommon, 3, allFirearms, 0.98f, 0.82f, 1f, 1f, 1f, false)
+            };
+        }
+
+        private WeaponAttachmentData CreateAttachmentData(
+            string id,
+            string displayName,
+            WeaponAttachmentSlot slot,
+            LootRarity rarity,
+            int cost,
+            WeaponSlot[] compatibleSlots,
+            float recoil,
+            float spread,
+            float reload,
+            float magazine,
+            float fireRate,
+            bool suppressor)
+        {
+            WeaponAttachmentData data = ScriptableObject.CreateInstance<WeaponAttachmentData>();
+            data.name = $"AT_{displayName.Replace(" ", string.Empty)}";
+            data.ConfigureRuntime(id, displayName, slot, rarity, cost, compatibleSlots, recoil, spread, reload, magazine, fireRate, suppressor);
+            return data;
+        }
+
+        private LootItem[] BuildLootTemplates(WeaponAttachmentData[] attachments)
+        {
+            List<LootItem> templates = new List<LootItem>
             {
                 CreateLootTemplate("PF_RuntimeLoot_Pistol", LootKind.Pistol, 12, "Pistol", new Vector3(0.7f, 0.18f, 0.25f), lootWeaponMaterial, 0, LootRarity.Common),
                 CreateLootTemplate("PF_RuntimeLoot_AssaultRifle", LootKind.AssaultRifle, 30, "Assault Rifle", new Vector3(1.1f, 0.18f, 0.22f), lootWeaponMaterial, 0, LootRarity.Rare),
@@ -4912,11 +4978,46 @@ namespace BattleZoneMobile
                 CreateLootTemplate("PF_RuntimeLoot_ShellAmmo", LootKind.ShellAmmo, 16, "Shells", new Vector3(0.62f, 0.28f, 0.46f), lootAmmoMaterial, 2, LootRarity.Uncommon),
                 CreateLootTemplate("PF_RuntimeLoot_Medkit", LootKind.Medkit, 1, "Medkit", new Vector3(0.55f, 0.28f, 0.55f), medkitMaterial, 6, LootRarity.Uncommon),
                 CreateLootTemplate("PF_RuntimeLoot_Bandage", LootKind.Bandage, 2, "Bandage", new Vector3(0.48f, 0.18f, 0.48f), medkitMaterial, 2, LootRarity.Common),
+                CreateLootTemplate("PF_RuntimeLoot_EnergyItem", LootKind.EnergyItem, 1, "Energy Item", new Vector3(0.36f, 0.56f, 0.36f), fuelCanMaterial, 4, LootRarity.Uncommon),
+                CreateLootTemplate("PF_RuntimeLoot_Grenade", LootKind.Grenade, 1, "Grenade", new Vector3(0.34f, 0.34f, 0.34f), vehicleAccentMaterial, 8, LootRarity.Uncommon),
+                CreateLootTemplate("PF_RuntimeLoot_SmokeGrenade", LootKind.SmokeGrenade, 1, "Smoke Grenade", new Vector3(0.34f, 0.52f, 0.34f), cloudMaterial, 6, LootRarity.Uncommon),
                 CreateLootTemplate("PF_RuntimeLoot_ArmorPlate", LootKind.ArmorPlate, 1, "Armor Plate", new Vector3(0.54f, 0.12f, 0.54f), vehicleAccentMaterial, 4, LootRarity.Uncommon),
-                CreateLootTemplate("PF_RuntimeLoot_ArmorVest", LootKind.ArmorVest, 1, "Tier 2 Armor", new Vector3(0.58f, 0.42f, 0.22f), playerAccentMaterial, 0, LootRarity.Rare),
-                CreateLootTemplate("PF_RuntimeLoot_Helmet", LootKind.Helmet, 1, "Tier 2 Helmet", new Vector3(0.46f, 0.28f, 0.46f), playerMaterial, 0, LootRarity.Rare),
-                CreateLootTemplate("PF_RuntimeLoot_Backpack", LootKind.Backpack, 1, "Backpack", new Vector3(0.52f, 0.44f, 0.28f), fenceMaterial, 0, LootRarity.Rare)
+                CreateLootTemplate("PF_RuntimeLoot_ArmorVestT1", LootKind.ArmorVest, 1, "Tier 1 Vest", new Vector3(0.58f, 0.42f, 0.22f), playerAccentMaterial, 0, LootRarity.Common, 1),
+                CreateLootTemplate("PF_RuntimeLoot_ArmorVestT2", LootKind.ArmorVest, 1, "Tier 2 Vest", new Vector3(0.62f, 0.46f, 0.24f), playerAccentMaterial, 0, LootRarity.Rare, 2),
+                CreateLootTemplate("PF_RuntimeLoot_ArmorVestT3", LootKind.ArmorVest, 1, "Tier 3 Vest", new Vector3(0.68f, 0.50f, 0.26f), armorDisplayMaterial, 0, LootRarity.Epic, 3),
+                CreateLootTemplate("PF_RuntimeLoot_HelmetT1", LootKind.Helmet, 1, "Tier 1 Helmet", new Vector3(0.42f, 0.24f, 0.42f), playerMaterial, 0, LootRarity.Common, 1),
+                CreateLootTemplate("PF_RuntimeLoot_HelmetT2", LootKind.Helmet, 1, "Tier 2 Helmet", new Vector3(0.46f, 0.28f, 0.46f), playerMaterial, 0, LootRarity.Rare, 2),
+                CreateLootTemplate("PF_RuntimeLoot_HelmetT3", LootKind.Helmet, 1, "Tier 3 Helmet", new Vector3(0.50f, 0.32f, 0.50f), armorDisplayMaterial, 0, LootRarity.Epic, 3),
+                CreateLootTemplate("PF_RuntimeLoot_BackpackT1", LootKind.Backpack, 1, "Tier 1 Backpack", new Vector3(0.50f, 0.40f, 0.26f), fenceMaterial, 0, LootRarity.Common, 1),
+                CreateLootTemplate("PF_RuntimeLoot_BackpackT2", LootKind.Backpack, 1, "Tier 2 Backpack", new Vector3(0.56f, 0.46f, 0.30f), fenceMaterial, 0, LootRarity.Rare, 2),
+                CreateLootTemplate("PF_RuntimeLoot_BackpackT3", LootKind.Backpack, 1, "Tier 3 Backpack", new Vector3(0.62f, 0.52f, 0.34f), airdropMaterial, 0, LootRarity.Epic, 3)
             };
+
+            if (attachments != null)
+            {
+                for (int i = 0; i < attachments.Length; i++)
+                {
+                    WeaponAttachmentData attachment = attachments[i];
+                    if (attachment == null)
+                    {
+                        continue;
+                    }
+
+                    templates.Add(CreateLootTemplate(
+                        $"PF_RuntimeLoot_Attachment_{attachment.AttachmentId}",
+                        LootKind.WeaponAttachment,
+                        1,
+                        attachment.DisplayName,
+                        AttachmentScaleFor(attachment.Slot),
+                        AttachmentMaterialFor(attachment.Slot),
+                        attachment.BackpackCost,
+                        attachment.Rarity,
+                        0,
+                        attachment));
+                }
+            }
+
+            return templates.ToArray();
         }
 
         private void BuildWeaponTestArea(AdvancedWeaponData[] weaponRoster, LootItem[] lootPrefabs)
@@ -4985,6 +5086,147 @@ namespace BattleZoneMobile
             CreateSurfaceTestPanel(root.transform, origin + new Vector3(-8f, 1.0f, 9f), CombatSurfaceType.Wood, fenceMaterial, "Gun Feel Wood");
             CreateSurfaceTestPanel(root.transform, origin + new Vector3(-8f, 1.0f, 12f), CombatSurfaceType.Glass, windowMaterial, "Gun Feel Glass");
 #endif
+        }
+
+        private void BuildLootInventoryTestArea(LootItem[] lootPrefabs)
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            const string areaName = "M24D Loot Inventory Test Area";
+            if (GameObject.Find(areaName) != null)
+            {
+                return;
+            }
+
+            GameObject root = new GameObject(areaName);
+            runtimeObjects.Add(root);
+            Vector3 origin = new Vector3(66f, 1.08f, -44f);
+            root.transform.position = origin;
+            runtimeLocationNames.Add("Loot Lab");
+            runtimeLocationPositions.Add(origin);
+
+            GameObject pad = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            pad.name = "M24D Loot Test Pad";
+            pad.transform.SetParent(root.transform, false);
+            pad.transform.localPosition = new Vector3(0f, -0.1f, 12f);
+            pad.transform.localScale = new Vector3(28f, 0.16f, 44f);
+            Renderer padRenderer = pad.GetComponent<Renderer>();
+            if (padRenderer != null)
+            {
+                padRenderer.sharedMaterial = sidewalkMaterial != null ? sidewalkMaterial : roadMaterial;
+            }
+
+            PlaceLootRow(root.transform, lootPrefabs, origin, 0, new[]
+            {
+                FindLootPrefab(lootPrefabs, LootKind.Backpack, 1),
+                FindLootPrefab(lootPrefabs, LootKind.Backpack, 2),
+                FindLootPrefab(lootPrefabs, LootKind.Backpack, 3),
+                FindLootPrefab(lootPrefabs, LootKind.Helmet, 1),
+                FindLootPrefab(lootPrefabs, LootKind.Helmet, 2),
+                FindLootPrefab(lootPrefabs, LootKind.Helmet, 3)
+            });
+
+            PlaceLootRow(root.transform, lootPrefabs, origin, 1, new[]
+            {
+                FindLootPrefab(lootPrefabs, LootKind.ArmorVest, 1),
+                FindLootPrefab(lootPrefabs, LootKind.ArmorVest, 2),
+                FindLootPrefab(lootPrefabs, LootKind.ArmorVest, 3),
+                FindLootPrefab(lootPrefabs, LootKind.Medkit),
+                FindLootPrefab(lootPrefabs, LootKind.Bandage),
+                FindLootPrefab(lootPrefabs, LootKind.EnergyItem)
+            });
+
+            PlaceLootRow(root.transform, lootPrefabs, origin, 2, new[]
+            {
+                FindLootPrefab(lootPrefabs, LootKind.LightAmmo),
+                FindLootPrefab(lootPrefabs, LootKind.MediumAmmo),
+                FindLootPrefab(lootPrefabs, LootKind.HeavyAmmo),
+                FindLootPrefab(lootPrefabs, LootKind.ShellAmmo),
+                FindLootPrefab(lootPrefabs, LootKind.Grenade),
+                FindLootPrefab(lootPrefabs, LootKind.SmokeGrenade)
+            });
+
+            string[] attachmentIds =
+            {
+                "optic_red_dot",
+                "optic_holo",
+                "optic_2x",
+                "optic_4x",
+                "optic_6x",
+                "optic_8x",
+                "muzzle_compensator",
+                "muzzle_flash_hider",
+                "muzzle_suppressor",
+                "mag_extended",
+                "mag_quickdraw",
+                "mag_extended_quickdraw",
+                "grip_vertical",
+                "grip_angled",
+                "grip_lightweight",
+                "stock_tactical",
+                "laser_compact"
+            };
+
+            for (int i = 0; i < attachmentIds.Length; i++)
+            {
+                LootItem prefab = FindAttachmentLootPrefab(lootPrefabs, attachmentIds[i]);
+                int row = 3 + i / 6;
+                int column = i % 6;
+                PlaceLootTestPickup(root.transform, prefab, origin + new Vector3(-10f + column * 4f, 0.15f, 2f + row * 4f));
+            }
+#endif
+        }
+
+        private void PlaceLootRow(Transform parent, LootItem[] lootPrefabs, Vector3 origin, int row, LootItem[] prefabs)
+        {
+            if (prefabs == null)
+            {
+                return;
+            }
+
+            for (int i = 0; i < prefabs.Length; i++)
+            {
+                PlaceLootTestPickup(parent, prefabs[i], origin + new Vector3(-10f + i * 4f, 0.15f, 2f + row * 4f));
+            }
+        }
+
+        private void PlaceLootTestPickup(Transform parent, LootItem prefab, Vector3 position)
+        {
+            if (prefab == null)
+            {
+                return;
+            }
+
+            LootItem item = Instantiate(prefab, position, Quaternion.Euler(0f, 18f, 0f), parent);
+            item.name = $"M24D Test {item.DisplayName}";
+            item.gameObject.SetActive(true);
+            SetLayerRecursive(item.gameObject, lootLayer);
+            CreateWorldLootLabel(item.transform, item.DisplayName, item.RarityLabel);
+        }
+
+        private TextMesh CreateWorldLootLabel(Transform parent, string displayName, string rarity)
+        {
+            GameObject labelObject = new GameObject("Loot Name Label");
+            labelObject.transform.SetParent(parent, false);
+            labelObject.transform.localPosition = new Vector3(0f, 1.1f, 0f);
+            TextMesh label = labelObject.AddComponent<TextMesh>();
+            label.text = $"[{rarity}] {displayName}";
+            label.anchor = TextAnchor.MiddleCenter;
+            label.alignment = TextAlignment.Center;
+            label.characterSize = 0.16f;
+            label.color = new Color(0.86f, 1f, 0.72f, 1f);
+            labelObject.AddComponent<WorldSpaceBillboard>();
+            Font legacyFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (legacyFont != null)
+            {
+                label.font = legacyFont;
+                MeshRenderer renderer = label.GetComponent<MeshRenderer>();
+                if (renderer != null)
+                {
+                    renderer.sharedMaterial = legacyFont.material;
+                }
+            }
+
+            return label;
         }
 
         private void CreateRecoilWall(Transform parent, Vector3 position)
@@ -5066,6 +5308,87 @@ namespace BattleZoneMobile
             return null;
         }
 
+        private static LootItem FindLootPrefab(LootItem[] lootPrefabs, LootKind kind, int tier)
+        {
+            if (lootPrefabs == null)
+            {
+                return null;
+            }
+
+            for (int i = 0; i < lootPrefabs.Length; i++)
+            {
+                LootItem prefab = lootPrefabs[i];
+                if (prefab != null && prefab.Kind == kind && prefab.Tier == tier)
+                {
+                    return prefab;
+                }
+            }
+
+            return FindLootPrefab(lootPrefabs, kind);
+        }
+
+        private static LootItem FindAttachmentLootPrefab(LootItem[] lootPrefabs, string attachmentId)
+        {
+            if (lootPrefabs == null || string.IsNullOrEmpty(attachmentId))
+            {
+                return null;
+            }
+
+            for (int i = 0; i < lootPrefabs.Length; i++)
+            {
+                LootItem prefab = lootPrefabs[i];
+                WeaponAttachmentData attachment = prefab != null ? prefab.AttachmentData : null;
+                if (attachment != null && attachment.AttachmentId == attachmentId)
+                {
+                    return prefab;
+                }
+            }
+
+            return null;
+        }
+
+        private Vector3 AttachmentScaleFor(WeaponAttachmentSlot slot)
+        {
+            switch (slot)
+            {
+                case WeaponAttachmentSlot.Optic:
+                    return new Vector3(0.38f, 0.24f, 0.38f);
+                case WeaponAttachmentSlot.Muzzle:
+                    return new Vector3(0.22f, 0.22f, 0.58f);
+                case WeaponAttachmentSlot.Magazine:
+                    return new Vector3(0.34f, 0.52f, 0.22f);
+                case WeaponAttachmentSlot.Grip:
+                    return new Vector3(0.24f, 0.42f, 0.24f);
+                case WeaponAttachmentSlot.Stock:
+                    return new Vector3(0.46f, 0.24f, 0.34f);
+                case WeaponAttachmentSlot.Laser:
+                    return new Vector3(0.20f, 0.18f, 0.52f);
+                default:
+                    return Vector3.one * 0.32f;
+            }
+        }
+
+        private Material AttachmentMaterialFor(WeaponAttachmentSlot slot)
+        {
+            switch (slot)
+            {
+                case WeaponAttachmentSlot.Optic:
+                    return windowMaterial != null ? windowMaterial : lootWeaponMaterial;
+                case WeaponAttachmentSlot.Muzzle:
+                    return m20MetalMaterial != null ? m20MetalMaterial : vehicleAccentMaterial;
+                case WeaponAttachmentSlot.Magazine:
+                    return lootAmmoMaterial != null ? lootAmmoMaterial : lootWeaponMaterial;
+                case WeaponAttachmentSlot.Grip:
+                    return vehicleAccentMaterial != null ? vehicleAccentMaterial : lootWeaponMaterial;
+                case WeaponAttachmentSlot.Stock:
+                    return fenceMaterial != null ? fenceMaterial : lootWeaponMaterial;
+                case WeaponAttachmentSlot.Laser:
+                    return fuelCanMaterial != null ? fuelCanMaterial : lootWeaponMaterial;
+                default:
+                    return lootWeaponMaterial;
+            }
+        }
+
         private void CreateWeaponTestTarget(Transform parent, Vector3 position, string objectName)
         {
             GameObject target = new GameObject(objectName);
@@ -5129,7 +5452,7 @@ namespace BattleZoneMobile
             }
         }
 
-        private LootItem CreateLootTemplate(string objectName, LootKind kind, int amount, string displayName, Vector3 scale, Material material, int backpackCost, LootRarity rarity = LootRarity.Common)
+        private LootItem CreateLootTemplate(string objectName, LootKind kind, int amount, string displayName, Vector3 scale, Material material, int backpackCost, LootRarity rarity = LootRarity.Common, int tier = 0, WeaponAttachmentData attachment = null)
         {
             GameObject loot = GameObject.CreatePrimitive(PrimitiveType.Cube);
             runtimeObjects.Add(loot);
@@ -5144,7 +5467,10 @@ namespace BattleZoneMobile
             boxCollider.isTrigger = true;
 
             LootItem item = loot.AddComponent<LootItem>();
-            item.Configure(kind, amount, displayName, backpackCost, rarity);
+            InventoryItemData data = ScriptableObject.CreateInstance<InventoryItemData>();
+            data.name = $"{objectName}_Data";
+            data.ConfigureRuntime(objectName, displayName, kind, rarity, amount, backpackCost, tier, attachment);
+            item.Configure(kind, amount, displayName, backpackCost, rarity, tier, attachment, data);
             loot.SetActive(false);
             return item;
         }
@@ -5176,8 +5502,17 @@ namespace BattleZoneMobile
                     break;
                 case LootKind.Medkit:
                 case LootKind.Bandage:
+                case LootKind.EnergyItem:
                     AddLootVisualPart(parent, $"{prefix} Medical Cross Vertical", new Vector3(0f, 0.33f, -0.02f), new Vector3(0.16f, 0.1f, 0.58f), fuelCanMaterial);
                     AddLootVisualPart(parent, $"{prefix} Medical Cross Horizontal", new Vector3(0f, 0.34f, -0.02f), new Vector3(0.56f, 0.1f, 0.16f), fuelCanMaterial);
+                    break;
+                case LootKind.Grenade:
+                    AddLootVisualPart(parent, $"{prefix} Safety Lever", new Vector3(0f, 0.36f, -0.18f), new Vector3(0.18f, 0.08f, 0.34f), lootAmmoMaterial);
+                    AddLootVisualPart(parent, $"{prefix} Pull Ring", new Vector3(0f, 0.50f, 0f), new Vector3(0.28f, 0.05f, 0.28f), m20MetalMaterial, PrimitiveType.Cylinder);
+                    break;
+                case LootKind.SmokeGrenade:
+                    AddLootVisualPart(parent, $"{prefix} Smoke Cap", new Vector3(0f, 0.42f, 0f), new Vector3(0.32f, 0.08f, 0.32f), lootAmmoMaterial, PrimitiveType.Cylinder);
+                    AddLootVisualPart(parent, $"{prefix} Smoke Band", new Vector3(0f, 0.27f, 0f), new Vector3(0.38f, 0.06f, 0.38f), cloudMaterial, PrimitiveType.Cylinder);
                     break;
                 case LootKind.ArmorPlate:
                 case LootKind.ArmorVest:
@@ -5191,6 +5526,10 @@ namespace BattleZoneMobile
                 case LootKind.Backpack:
                     AddLootVisualPart(parent, $"{prefix} Pack Pocket", new Vector3(0f, 0.36f, -0.18f), new Vector3(0.46f, 0.24f, 0.12f), playerAccentMaterial);
                     AddLootVisualPart(parent, $"{prefix} Pack Roll", new Vector3(0f, 0.62f, 0f), new Vector3(0.18f, 0.42f, 0.18f), coverMaterial, PrimitiveType.Cylinder);
+                    break;
+                case LootKind.WeaponAttachment:
+                    AddLootVisualPart(parent, $"{prefix} Rail Clamp", new Vector3(0f, 0.34f, 0.22f), new Vector3(0.42f, 0.10f, 0.16f), m20MetalMaterial);
+                    AddLootVisualPart(parent, $"{prefix} Socket Pin", new Vector3(0f, 0.42f, -0.18f), new Vector3(0.16f, 0.16f, 0.28f), vehicleAccentMaterial);
                     break;
             }
         }
@@ -5536,6 +5875,9 @@ namespace BattleZoneMobile
             uiRefs.ProneButton.onClick.AddListener(playerRefs.Controller.ToggleProne);
             uiRefs.DriveButton.onClick.AddListener(playerRefs.VehicleInteractor.ToggleVehicle);
             uiRefs.InventoryButton.onClick.AddListener(uiRefs.UIManager.ToggleInventory);
+            uiRefs.UseItemButton.onClick.AddListener(playerRefs.Inventory.UseBestHealingItem);
+            uiRefs.EquipAttachmentButton.onClick.AddListener(playerRefs.Inventory.UseOrEquipBestInventoryAction);
+            uiRefs.DropItemButton.onClick.AddListener(playerRefs.Inventory.DropLightestInventoryItem);
             uiRefs.CloseInventoryButton.onClick.AddListener(uiRefs.UIManager.HideInventory);
             uiRefs.FireButton.onPressed.AddListener(playerRefs.Weapons.FirePressed);
             uiRefs.FireButton.onReleased.AddListener(playerRefs.Weapons.FireReleased);
@@ -5742,6 +6084,9 @@ namespace BattleZoneMobile
             public MobileHoldButton ThrottleButton;
             public MobileHoldButton BrakeButton;
             public GameObject InventoryPanel;
+            public Button UseItemButton;
+            public Button EquipAttachmentButton;
+            public Button DropItemButton;
             public GameObject PausePanel;
             public GameObject SettingsPanel;
             public Button PauseButton;

@@ -60,7 +60,8 @@ namespace BattleZoneMobile
             float distance = segment.magnitude;
             if (distance > 0.0001f)
             {
-                if (Physics.Raycast(current, segment / distance, out RaycastHit hit, distance, context != null ? context.hitMask : ~0, QueryTriggerInteraction.Ignore) && !IsOwnCollider(hit.collider))
+                int mask = context != null ? context.hitMask.value : ~0;
+                if (Physics.Raycast(current, segment / distance, out RaycastHit hit, distance, mask, QueryTriggerInteraction.Ignore) && !IsOwnCollider(hit.collider))
                 {
                     HandleHit(hit);
                     Release();
