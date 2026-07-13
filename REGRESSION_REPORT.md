@@ -1,5 +1,36 @@
 # BattleZone Mobile - Regression Report
 
+## Milestone 24C Gun Feel and Combat Feedback - 2026-07-13
+
+Scope:
+
+- Current project only: `BattleZoneMobile_Unity6_Project_MatchStateFixed-4`.
+- Improve gun feel and feedback without changing the existing active weapon architecture or rebuilding movement, pickup, aircraft/drop, Animator, or match-flow systems.
+
+Fix applied:
+
+- Extended `WeaponDefinition` with per-weapon camera recoil, visual weapon kick, crosshair feedback, aim sway, scoped breathing sway, damage-number toggle, and optional audio override hooks.
+- Updated `WeaponController` to apply separate camera recoil, local weapon visual kick, body-zone damage multipliers, surface-aware impact feedback, dry-fire feedback, headshot feedback, and kill confirmation.
+- Updated `WeaponModelRig` so recoil is applied as local visual offset/rotation and smoothly returns to the base pose.
+- Added `GunFeelFeedbackController` to continuously drive crosshair bloom from movement, stance, aim, and active weapon data.
+- Added generated temporary audio hooks in `RuntimeAudioBank` for suppressed fire, dry fire, hit confirm, headshot confirm, kill confirm, and material impacts.
+- Added `M24C Gun Feel Test Area` with close, medium, and long body-zone targets plus a recoil spray wall and material panels.
+
+Regression audit results:
+
+- PASS: `ReliablePlayerMovement` was not modified.
+- PASS: `LootPickupInteractor` and pickup controls were not modified.
+- PASS: `BattleRoyaleMatchFlow` was not modified.
+- PASS: Animator placement remains on visual child; no Player-root Animator was added.
+- PASS: Damage overlay scripts were not modified.
+- PASS: Existing fire, reload, weapon switching, and inventory pickup paths remain on `WeaponController`/`PlayerInventory`.
+- PASS: Runtime C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+
+Unity Editor verification:
+
+- NOT RUN: Live Unity Play Mode remains blocked in this environment by Unity Hub/license activation.
+- Required manual gun-feel verification is listed in `TEST_CHECKLIST.md`.
+
 ## Pickup Controls Hotfix - 2026-07-13
 
 Scope:

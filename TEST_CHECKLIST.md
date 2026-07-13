@@ -1,5 +1,36 @@
 # BattleZone Mobile - Test Checklist
 
+## Milestone 24C - Gun Feel and Combat Feedback
+
+Automated/static checks run in this workspace:
+
+- PASS: Runtime C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+- PASS: `WeaponDefinition` exposes per-weapon camera recoil, weapon recoil, crosshair, ADS sway, damage-number, and audio override data.
+- PASS: `WeaponController` still owns the active fire/reload path and now applies camera recoil, visual weapon kick, dry-fire audio, surface impacts, headshot feedback, and kill confirmation.
+- PASS: `WeaponModelRig` applies weapon visual kick locally and does not move the Player root.
+- PASS: `GunFeelFeedbackController` drives crosshair feedback from movement, aiming, crouch, prone, and active weapon bloom.
+- PASS: `RuntimeAudioBank` includes generated placeholder hooks for fire, suppressed fire, reload, dry fire, hit confirm, headshot confirm, kill confirm, and surface impacts.
+- PASS: `M24C Gun Feel Test Area` is created only in Editor/development builds and does not replace the existing match flow.
+- PASS: `ReliablePlayerMovement`, pickup controls, Animator placement, aircraft/drop/landing ownership, and red overlay code were not redesigned.
+
+Required manual Unity Play Mode checks:
+
+1. Open `Assets/BattleZoneMobile/Scenes/BZ_Main.unity`.
+2. Press Play and confirm no red Console errors.
+3. Start a match, complete aircraft/freefall/parachute/landing, and confirm movement still works.
+4. Confirm `M24C Gun Feel Test Area` exists near the weapon test area.
+5. Pick up a weapon with `E`; confirm pickup, inventory, fire, reload, and switching still work.
+6. Fire pistol, rifle, SMG, sniper, and shotgun; confirm each has distinct camera recoil and no permanent camera shake.
+7. Confirm visual weapon kick happens on the weapon model only and does not move the Player root.
+8. Move while aiming/firing and confirm crosshair expands while moving/firing and tightens while aiming, crouched, or prone.
+9. Shoot close, medium, and long targets; confirm hit marker, headshot marker, and damage numbers work.
+10. Kill a test target or bot; confirm kill confirmation appears in the feed.
+11. Shoot metal, wood, stone, glass, and ground/recoil wall surfaces; confirm impact particles and impact sounds trigger.
+12. Empty a magazine with no reserve ammo; confirm dry-fire feedback triggers.
+13. Confirm mobile fire and aim buttons remain responsive and one tap does not create duplicate shots.
+14. Confirm no accidental fire occurs when tapping non-fire UI controls.
+15. Confirm red overlay does not return and Animator root override does not return.
+
 ## Pickup Controls Hotfix
 
 Automated/static checks run in this workspace:

@@ -66,6 +66,7 @@ namespace BattleZoneMobile
         public UnityEvent onWeaponSwitchStarted = new UnityEvent();
         public UnityEvent onWeaponSwitchFinished = new UnityEvent();
         public UnityEvent onHeadshotConfirmed = new UnityEvent();
+        public WeaponChangedEvent onKillConfirmed = new WeaponChangedEvent();
         public HitConfirmedEvent onHitConfirmed = new HitConfirmedEvent();
 
         private WeaponRuntimeState currentWeapon;
@@ -77,10 +78,14 @@ namespace BattleZoneMobile
         private float fireLockUntilTime;
         private float fireBufferedUntilTime;
         private float recoilHeat;
+        private float crosshairBloom;
         private bool fireHeld;
         private bool controlsEnabled = true;
 
         public WeaponRuntimeState CurrentWeapon => currentWeapon;
+        public WeaponDefinition CurrentDefinition => currentWeapon != null ? currentWeapon.definition : null;
+        public float CurrentRecoilHeat => recoilHeat;
+        public float CurrentCrosshairBloom => crosshairBloom;
         public bool IsReloading => reloadRoutine != null;
         public bool IsSwitching => switchRoutine != null;
         public bool ControlsEnabled => controlsEnabled;
@@ -132,6 +137,8 @@ namespace BattleZoneMobile
         private void Update()
         {
             recoilHeat = Mathf.MoveTowards(recoilHeat, 0f, recoilHeatRecovery * Time.deltaTime);
+            float crosshairRecovery = currentWeapon != null && currentWeapon.definition != null ? currentWeapon.definition.crosshairRecoverySpeed : 9f;
+            crosshairBloom = Mathf.MoveTowards(crosshairBloom, 0f, Mathf.Max(0.1f, crosshairRecovery) * Time.deltaTime * 10f);
             if (fireBufferedUntilTime > Time.time || (fireHeld && currentWeapon != null && currentWeapon.definition != null && currentWeapon.definition.automatic))
             {
                 TryFire();
@@ -388,7 +395,15 @@ namespace BattleZoneMobile
 
             if (definition.usesAmmo && currentWeapon.magazineAmmo <= 0)
             {
-                RequestReload();
+                if (currentWeapon.reserveAmmo > 0)
+                {
+                    RequestReload();
+                }
+                else
+                {
+                    DryFire(definition);
+                }
+
                 return;
             }
 
@@ -400,12 +415,13 @@ namespace BattleZoneMobile
             }
 
             recoilHeat = Mathf.Clamp01(recoilHeat + recoilHeatPerShot);
+            crosshairBloom = Mathf.Max(crosshairBloom, definition.crosshairFireBloom);
             fireBufferedUntilTime = 0f;
             FireRay(definition);
             SpawnMuzzleFlash(definition);
             SpawnShellEjection();
             ApplyRecoil(definition);
-            RuntimeAudioBank.Instance?.PlayWeaponFire(definition.slot, muzzlePoint != null ? muzzlePoint.position : transform.position);
+            PlayFireAudio(definition);
             onFired.Invoke();
             RaiseAmmoChanged();
 
@@ -450,7 +466,7 @@ namespace BattleZoneMobile
                     if (damageable != null && damageable.IsAlive)
                     {
                         bool headshot = IsHeadshot(hit, damageable);
-                        float damage = definition.damage / pellets * (headshot ? headshotMultiplier : 1f);
+                        float damage = definition.damage / pellets * ResolveLegacyDamageMultiplier(hit.collider, headshot);
                         if (headshot)
                         {
                             PlayerEquipment equipment = hit.collider.GetComponentInParent<PlayerEquipment>();
@@ -460,19 +476,26 @@ namespace BattleZoneMobile
                             }
                         }
 
+                        bool wasAlive = damageable.IsAlive;
                         damageable.TakeDamage(damage, hit.point, hit.normal, gameObject);
-                        SpawnDamageNumber(hit.point, damage, headshot);
-                        SpawnHitEffect(hit.point, hit.normal);
-                        RuntimeAudioBank.Instance?.PlayHit(hit.point);
+                        SpawnDamageNumber(hit.point, damage, headshot, definition);
+                        SpawnHitEffect(hit);
+                        PlayHitConfirmAudio(definition, hit.point, headshot);
                         onHitConfirmed.Invoke(hit.point, damage);
                         if (headshot)
                         {
                             onHeadshotConfirmed.Invoke();
                         }
+
+                        if (wasAlive && !damageable.IsAlive)
+                        {
+                            PlayKillConfirmAudio(definition, hit.point);
+                            onKillConfirmed.Invoke("Kill confirmed");
+                        }
                     }
                     else
                     {
-                        SpawnHitEffect(hit.point, hit.normal);
+                        SpawnHitEffect(hit);
                     }
 
                     break;
@@ -529,14 +552,18 @@ namespace BattleZoneMobile
             tracer.Play(tracerLife);
         }
 
-        private void SpawnHitEffect(Vector3 hitPoint, Vector3 hitNormal)
+        private void SpawnHitEffect(RaycastHit hit)
         {
             if (hitEffectPrefab == null)
             {
                 return;
             }
 
-            RuntimeParticlePool.Play(hitEffectPrefab, hitPoint + hitNormal * 0.02f, Quaternion.LookRotation(hitNormal), 0.5f);
+            Vector3 normal = hit.normal.sqrMagnitude > 0.001f ? hit.normal : Vector3.up;
+            ParticleSystem particles = RuntimeParticlePool.Play(hitEffectPrefab, hit.point + normal * 0.02f, Quaternion.LookRotation(normal), 0.5f);
+            CombatSurfaceType surface = CombatSurface.ResolveSurfaceType(hit.collider);
+            ApplyImpactParticleColor(particles, ResolveImpactColor(surface));
+            RuntimeAudioBank.Instance?.PlayImpact(surface, hit.point);
         }
 
         private static Material CreateLineMaterial(Color color)
@@ -583,13 +610,19 @@ namespace BattleZoneMobile
             }
 
             bool aiming = recoilReceiver.IsAiming;
-            float verticalKick = Mathf.Max(0.1f, definition.cameraKick);
-            float horizontalKick = UnityEngine.Random.Range(-definition.cameraKick, definition.cameraKick) * (0.12f + recoilHeat * 0.11f);
+            float verticalKick = Mathf.Max(0.05f, definition.cameraVerticalKick > 0f ? definition.cameraVerticalKick : definition.cameraKick);
+            float horizontalKickRange = Mathf.Max(0f, definition.cameraHorizontalKick > 0f ? definition.cameraHorizontalKick : definition.cameraKick * 0.18f);
+            float horizontalKick = UnityEngine.Random.Range(-horizontalKickRange, horizontalKickRange) * (1f + recoilHeat * 0.32f);
             float aimScale = aiming ? adsRecoilScale : hipRecoilScale;
             float attachmentRecoil = currentWeapon != null && currentWeapon.attachments != null ? currentWeapon.attachments.RecoilMultiplier : 1f;
             float recovery = aiming ? definition.recoilRecovery * 1.15f : definition.recoilRecovery;
             recoilReceiver.AddRecoil(verticalKick * aimScale * (1f + recoilHeat * 0.16f) * attachmentRecoil, horizontalKick * aimScale * attachmentRecoil, recovery);
             recoilReceiver.SetAimFieldOfView(definition.adsFieldOfView);
+            weaponModelRig?.ApplyWeaponKick(
+                definition.weaponKickDistance * (aiming ? 0.72f : 1f) * attachmentRecoil,
+                definition.weaponPitchKick * (1f + recoilHeat * 0.12f) * attachmentRecoil,
+                horizontalKick * 3.2f,
+                definition.weaponReturnSpeed);
         }
 
         private Vector3 ApplyAimAssist(Vector3 origin, Vector3 direction, float range)
@@ -627,6 +660,11 @@ namespace BattleZoneMobile
 
         private static bool IsHeadshot(RaycastHit hit, IDamageable damageable)
         {
+            if (CombatImpactUtility.ResolveHitZone(hit.collider) == CombatHitZone.Head)
+            {
+                return true;
+            }
+
             if (hit.collider != null && hit.collider.name.ToLowerInvariant().Contains("head"))
             {
                 return true;
@@ -641,14 +679,131 @@ namespace BattleZoneMobile
             return hit.point.y > damageComponent.transform.position.y + 1.32f;
         }
 
-        private void SpawnDamageNumber(Vector3 hitPoint, float damage, bool headshot)
+        private void SpawnDamageNumber(Vector3 hitPoint, float damage, bool headshot, WeaponDefinition definition)
         {
-            if (damageNumberPrefab == null)
+            if (damageNumberPrefab == null || (definition != null && !definition.showDamageNumbers))
             {
                 return;
             }
 
             WorldDamageNumber.Spawn(damageNumberPrefab, hitPoint + Vector3.up * 0.65f, aimCamera, damage, headshot);
+        }
+
+        private float ResolveLegacyDamageMultiplier(Collider collider, bool headshot)
+        {
+            if (headshot)
+            {
+                return Mathf.Max(1f, headshotMultiplier);
+            }
+
+            switch (CombatImpactUtility.ResolveHitZone(collider))
+            {
+                case CombatHitZone.Neck:
+                    return 1.45f;
+                case CombatHitZone.Arm:
+                    return 0.72f;
+                case CombatHitZone.Leg:
+                    return 0.64f;
+                default:
+                    return 1f;
+            }
+        }
+
+        private void DryFire(WeaponDefinition definition)
+        {
+            nextFireTime = Time.time + 0.12f;
+            fireBufferedUntilTime = 0f;
+            fireHeld = false;
+            PlayDryFireAudio(definition);
+            RaiseAmmoChanged();
+        }
+
+        private void PlayFireAudio(WeaponDefinition definition)
+        {
+            Vector3 position = muzzlePoint != null ? muzzlePoint.position : transform.position;
+            if (definition != null && definition.fireAudioOverride != null)
+            {
+                AudioSource.PlayClipAtPoint(definition.fireAudioOverride, position, 0.65f);
+                return;
+            }
+
+            RuntimeAudioBank.Instance?.PlayWeaponFire(definition != null ? definition.slot : WeaponSlot.Pistol, position, false);
+        }
+
+        private void PlayDryFireAudio(WeaponDefinition definition)
+        {
+            Vector3 position = muzzlePoint != null ? muzzlePoint.position : transform.position;
+            if (definition != null && definition.dryFireAudioOverride != null)
+            {
+                AudioSource.PlayClipAtPoint(definition.dryFireAudioOverride, position, 0.42f);
+                return;
+            }
+
+            RuntimeAudioBank.Instance?.PlayDryFire(position);
+        }
+
+        private void PlayHitConfirmAudio(WeaponDefinition definition, Vector3 position, bool headshot)
+        {
+            AudioClip clip = null;
+            if (definition != null)
+            {
+                clip = headshot ? definition.headshotConfirmAudioOverride : definition.hitConfirmAudioOverride;
+            }
+
+            if (clip != null)
+            {
+                AudioSource.PlayClipAtPoint(clip, position, headshot ? 0.5f : 0.44f);
+                return;
+            }
+
+            RuntimeAudioBank.Instance?.PlayHitConfirm(position, headshot);
+        }
+
+        private void PlayKillConfirmAudio(WeaponDefinition definition, Vector3 position)
+        {
+            if (definition != null && definition.killConfirmAudioOverride != null)
+            {
+                AudioSource.PlayClipAtPoint(definition.killConfirmAudioOverride, position, 0.52f);
+                return;
+            }
+
+            RuntimeAudioBank.Instance?.PlayKillConfirm(position);
+        }
+
+        private static Color ResolveImpactColor(CombatSurfaceType surface)
+        {
+            switch (surface)
+            {
+                case CombatSurfaceType.Metal:
+                    return new Color(0.8f, 0.88f, 1f, 1f);
+                case CombatSurfaceType.Wood:
+                    return new Color(0.9f, 0.58f, 0.28f, 1f);
+                case CombatSurfaceType.Stone:
+                    return new Color(0.74f, 0.72f, 0.66f, 1f);
+                case CombatSurfaceType.Glass:
+                    return new Color(0.58f, 0.9f, 1f, 1f);
+                case CombatSurfaceType.Sand:
+                case CombatSurfaceType.Grass:
+                    return new Color(0.74f, 0.66f, 0.34f, 1f);
+                default:
+                    return new Color(1f, 0.62f, 0.22f, 1f);
+            }
+        }
+
+        private static void ApplyImpactParticleColor(ParticleSystem particles, Color color)
+        {
+            if (particles == null)
+            {
+                return;
+            }
+
+            ParticleSystem.MainModule main = particles.main;
+            main.startColor = color;
+            ParticleSystemRenderer renderer = particles.GetComponent<ParticleSystemRenderer>();
+            if (renderer != null && renderer.material != null)
+            {
+                ApplyLineMaterialColor(renderer.material, color);
+            }
         }
 
         private void RequestReload()
@@ -670,7 +825,7 @@ namespace BattleZoneMobile
         {
             WeaponRuntimeState reloadingWeapon = currentWeapon;
             onReloadStarted.Invoke();
-            RuntimeAudioBank.Instance?.PlayReload(transform.position);
+            PlayReloadAudio(reloadingWeapon.definition);
             fireHeld = false;
             float reloadModifier = reloadingWeapon.attachments != null ? reloadingWeapon.attachments.ReloadMultiplier : 1f;
             float reloadDuration = Mathf.Max(0.12f, reloadingWeapon.definition.reloadTime * reloadModifier);
@@ -696,6 +851,17 @@ namespace BattleZoneMobile
             RaiseAmmoChanged();
         }
 
+        private void PlayReloadAudio(WeaponDefinition definition)
+        {
+            if (definition != null && definition.reloadAudioOverride != null)
+            {
+                AudioSource.PlayClipAtPoint(definition.reloadAudioOverride, transform.position, 0.46f);
+                return;
+            }
+
+            RuntimeAudioBank.Instance?.PlayReload(transform.position);
+        }
+
         private void RaiseWeaponChanged()
         {
             if (currentWeapon == null || currentWeapon.definition == null)
@@ -708,6 +874,7 @@ namespace BattleZoneMobile
             onWeaponChanged.Invoke(BuildCurrentWeaponDisplayName());
             weaponModelRig?.ShowWeapon(currentWeapon.definition.slot);
             recoilReceiver?.SetAimFieldOfView(currentWeapon.definition.adsFieldOfView);
+            recoilReceiver?.SetAimSway(currentWeapon.definition.aimSway, currentWeapon.definition.scopedBreathingSway);
             RaiseAmmoChanged();
         }
 

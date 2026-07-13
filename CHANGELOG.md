@@ -1,5 +1,17 @@
 # BattleZone Mobile Changelog
 
+## Milestone 24C - Gun Feel and Combat Feedback
+
+- Added per-weapon camera recoil values for vertical kick, horizontal kick, and recovery while preserving the existing `WeaponController` fire/reload architecture.
+- Added visual weapon recoil through `WeaponModelRig.ApplyWeaponKick`, keeping all recoil on the weapon visual rig and never moving the Player root.
+- Added `GunFeelFeedbackController` to drive crosshair bloom from movement, firing, aiming, crouch, prone, and active weapon data.
+- Added optional weapon data hooks for damage number visibility, fire/reload/dry-fire/hit/headshot/kill audio overrides, aim sway, scoped breathing sway, and crosshair tuning.
+- Improved hit feedback with body-zone damage multipliers, headshot detection through `CombatHitbox`, headshot marker, kill confirmation feed, and optional damage numbers.
+- Added surface-aware impact feedback for Metal, Wood, Stone, Glass, and ground-like surfaces with colored impact particles and generated temporary impact sounds.
+- Added generated placeholder audio hooks for dry fire, hit confirm, headshot confirm, kill confirm, suppressed fire, and surface impacts.
+- Added `M24C Gun Feel Test Area` in Editor/development builds with close, medium, and long hit-zone targets plus a recoil spray wall and surface panels.
+- Preserved stable movement, joystick, pickup, fire, reload, weapon switching, inventory, aircraft/freefall/landing flow, Animator placement, and red overlay behavior.
+
 ## Pickup Controls Hotfix
 
 - Added direct Editor/Desktop pickup controls: `E` picks up the highlighted item and `F` works as a fallback.

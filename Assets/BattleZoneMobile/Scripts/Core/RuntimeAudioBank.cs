@@ -13,18 +13,27 @@ namespace BattleZoneMobile
         private AudioClip smgShot;
         private AudioClip sniperShot;
         private AudioClip shotgunShot;
+        private AudioClip suppressedShot;
         private AudioClip meleeSwing;
         private AudioClip reload;
+        private AudioClip dryFire;
         private AudioClip footstepGrass;
         private AudioClip footstepRoad;
         private AudioClip footstepBuilding;
         private AudioClip footstepWater;
         private AudioClip hit;
+        private AudioClip headshotConfirm;
+        private AudioClip killConfirm;
         private AudioClip death;
         private AudioClip pickup;
         private AudioClip switchWeapon;
         private AudioClip uiClick;
         private AudioClip zoneWarning;
+        private AudioClip metalImpact;
+        private AudioClip woodImpact;
+        private AudioClip stoneImpact;
+        private AudioClip glassImpact;
+        private AudioClip groundImpact;
 
         private void Awake()
         {
@@ -35,40 +44,61 @@ namespace BattleZoneMobile
             smgShot = CreateToneClip("BZ_SMGShot", 0.055f, 260f, 0.48f, 0.32f);
             sniperShot = CreateToneClip("BZ_SniperShot", 0.22f, 95f, 0.86f, 0.24f);
             shotgunShot = CreateToneClip("BZ_ShotgunShot", 0.18f, 115f, 0.78f, 0.36f);
+            suppressedShot = CreateToneClip("BZ_SuppressedShot", 0.075f, 310f, 0.28f, 0.12f);
             meleeSwing = CreateToneClip("BZ_MeleeSwing", 0.16f, 90f, 0.34f, 0.05f);
             reload = CreateToneClip("BZ_Reload", 0.28f, 120f, 0.28f, 0.08f);
+            dryFire = CreateToneClip("BZ_DryFire", 0.075f, 760f, 0.18f, 0.02f);
             footstepGrass = CreateToneClip("BZ_Footstep_Grass", 0.09f, 58f, 0.18f, 0.18f);
             footstepRoad = CreateToneClip("BZ_Footstep_Road", 0.075f, 82f, 0.20f, 0.08f);
             footstepBuilding = CreateToneClip("BZ_Footstep_Building", 0.085f, 112f, 0.17f, 0.05f);
             footstepWater = CreateToneClip("BZ_Footstep_Water", 0.12f, 48f, 0.16f, 0.42f);
             hit = CreateToneClip("BZ_Hit", 0.12f, 330f, 0.34f, 0.12f);
+            headshotConfirm = CreateToneClip("BZ_HeadshotConfirm", 0.16f, 640f, 0.34f, 0.04f);
+            killConfirm = CreateToneClip("BZ_KillConfirm", 0.24f, 520f, 0.36f, 0.06f);
             death = CreateToneClip("BZ_Death", 0.34f, 70f, 0.36f, 0.18f);
             pickup = CreateToneClip("BZ_Pickup", 0.18f, 410f, 0.22f, 0.04f);
             switchWeapon = CreateToneClip("BZ_SwitchWeapon", 0.16f, 150f, 0.24f, 0.03f);
             uiClick = CreateToneClip("BZ_UI_Click", 0.065f, 520f, 0.18f, 0.02f);
             zoneWarning = CreateToneClip("BZ_Zone_Warning", 0.34f, 240f, 0.24f, 0.16f);
+            metalImpact = CreateToneClip("BZ_Impact_Metal", 0.08f, 860f, 0.22f, 0.18f);
+            woodImpact = CreateToneClip("BZ_Impact_Wood", 0.09f, 180f, 0.20f, 0.14f);
+            stoneImpact = CreateToneClip("BZ_Impact_Stone", 0.10f, 120f, 0.22f, 0.22f);
+            glassImpact = CreateToneClip("BZ_Impact_Glass", 0.12f, 920f, 0.18f, 0.28f);
+            groundImpact = CreateToneClip("BZ_Impact_Ground", 0.09f, 95f, 0.18f, 0.24f);
         }
 
         public void PlayWeaponFire(WeaponSlot slot, Vector3 position)
         {
+            PlayWeaponFire(slot, position, false);
+        }
+
+        public void PlayWeaponFire(WeaponSlot slot, Vector3 position, bool suppressed)
+        {
             AudioClip clip = pistolShot;
-            switch (slot)
+            if (suppressed)
             {
-                case WeaponSlot.AssaultRifle:
-                    clip = rifleShot;
-                    break;
-                case WeaponSlot.SMG:
-                    clip = smgShot;
-                    break;
-                case WeaponSlot.Sniper:
-                    clip = sniperShot;
-                    break;
-                case WeaponSlot.Shotgun:
-                    clip = shotgunShot;
-                    break;
-                case WeaponSlot.Pistol:
-                    clip = pistolShot;
-                    break;
+                clip = suppressedShot;
+            }
+            else
+            {
+                switch (slot)
+                {
+                    case WeaponSlot.AssaultRifle:
+                        clip = rifleShot;
+                        break;
+                    case WeaponSlot.SMG:
+                        clip = smgShot;
+                        break;
+                    case WeaponSlot.Sniper:
+                        clip = sniperShot;
+                        break;
+                    case WeaponSlot.Shotgun:
+                        clip = shotgunShot;
+                        break;
+                    case WeaponSlot.Pistol:
+                        clip = pistolShot;
+                        break;
+                }
             }
 
             PlayOneShot(clip, position, 0.65f);
@@ -77,6 +107,11 @@ namespace BattleZoneMobile
         public void PlayReload(Vector3 position)
         {
             PlayOneShot(reload, position, 0.46f);
+        }
+
+        public void PlayDryFire(Vector3 position)
+        {
+            PlayOneShot(dryFire, position, 0.42f);
         }
 
         public void PlayFootstep(Vector3 position)
@@ -113,6 +148,38 @@ namespace BattleZoneMobile
         public void PlayHit(Vector3 position)
         {
             PlayOneShot(hit, position, 0.44f);
+        }
+
+        public void PlayHitConfirm(Vector3 position, bool headshot)
+        {
+            PlayOneShot(headshot ? headshotConfirm : hit, position, headshot ? 0.5f : 0.44f);
+        }
+
+        public void PlayKillConfirm(Vector3 position)
+        {
+            PlayOneShot(killConfirm, position, 0.52f);
+        }
+
+        public void PlayImpact(CombatSurfaceType surface, Vector3 position)
+        {
+            AudioClip clip = groundImpact;
+            switch (surface)
+            {
+                case CombatSurfaceType.Metal:
+                    clip = metalImpact;
+                    break;
+                case CombatSurfaceType.Wood:
+                    clip = woodImpact;
+                    break;
+                case CombatSurfaceType.Stone:
+                    clip = stoneImpact;
+                    break;
+                case CombatSurfaceType.Glass:
+                    clip = glassImpact;
+                    break;
+            }
+
+            PlayOneShot(clip, position, 0.26f);
         }
 
         public void PlayDeath(Vector3 position)

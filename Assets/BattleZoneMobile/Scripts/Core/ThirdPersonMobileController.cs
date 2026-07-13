@@ -79,6 +79,8 @@ namespace BattleZoneMobile
         private float pitch = 12f;
         private float recoilPitch;
         private float recoilRecoverySpeed = 16f;
+        private float aimSwayStrength = 0.08f;
+        private float breathingSwayStrength = 0.04f;
         private float currentCameraDistance;
         private float currentShoulderOffset;
         private float animationMoveSpeed;
@@ -291,6 +293,12 @@ namespace BattleZoneMobile
         public void SetAimFieldOfView(float fov)
         {
             aimFieldOfView = Mathf.Clamp(fov, 32f, normalFieldOfView);
+        }
+
+        public void SetAimSway(float weaponSway, float breathingSway)
+        {
+            aimSwayStrength = Mathf.Clamp(weaponSway, 0f, 0.45f);
+            breathingSwayStrength = Mathf.Clamp(breathingSway, 0f, 0.35f);
         }
 
         public void PlayLandingRecovery(float seconds)
@@ -1048,7 +1056,10 @@ namespace BattleZoneMobile
             float targetShoulderOffset = dropCameraActive ? 0f : (rightShoulder ? 1f : -1f) * (aimHeld ? shoulderOffset * 0.72f : shoulderOffset);
             currentShoulderOffset = Mathf.Lerp(currentShoulderOffset, targetShoulderOffset, 1f - Mathf.Exp(-cameraFollowSharpness * Time.deltaTime));
 
-            Quaternion cameraRotation = Quaternion.Euler(Mathf.Clamp(pitch - recoilPitch, minPitch, maxPitch), yaw, 0f);
+            float swayScale = aimHeld ? 1f : 0f;
+            float swayPitch = swayScale * (Mathf.Sin(Time.time * 1.85f) * aimSwayStrength + Mathf.Sin(Time.time * 0.72f) * breathingSwayStrength);
+            float swayYaw = swayScale * (Mathf.Sin(Time.time * 1.35f + 0.7f) * aimSwayStrength * 0.72f + Mathf.Sin(Time.time * 0.54f + 1.3f) * breathingSwayStrength * 0.86f);
+            Quaternion cameraRotation = Quaternion.Euler(Mathf.Clamp(pitch - recoilPitch + swayPitch, minPitch, maxPitch), yaw + swayYaw, 0f);
             Vector3 shoulderPosition = cameraPivot.position + cameraRotation * Vector3.right * currentShoulderOffset;
             Vector3 desiredPosition = shoulderPosition - cameraRotation * Vector3.forward * currentCameraDistance;
             Vector3 toDesired = desiredPosition - shoulderPosition;

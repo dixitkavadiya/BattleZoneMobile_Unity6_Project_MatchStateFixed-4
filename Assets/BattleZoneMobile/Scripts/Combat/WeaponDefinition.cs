@@ -55,12 +55,35 @@ namespace BattleZoneMobile
         public float adsSpreadMultiplier = 0.55f;
         public float hipSpreadMultiplier = 1f;
         public float cameraKick = 0.5f;
+        public float cameraVerticalKick = 0.5f;
+        public float cameraHorizontalKick = 0.08f;
         public float recoilRecovery = 16f;
+        public float weaponKickDistance = 0.035f;
+        public float weaponPitchKick = 1.5f;
+        public float weaponReturnSpeed = 18f;
+        public float crosshairFireBloom = 42f;
+        public float crosshairMovementBloom = 26f;
+        public float crosshairAimMultiplier = 0.58f;
+        public float crosshairCrouchMultiplier = 0.74f;
+        public float crosshairProneMultiplier = 0.56f;
+        public float crosshairRecoverySpeed = 9f;
+        public float aimSway = 0.08f;
+        public float scopedBreathingSway = 0.04f;
+        public bool showDamageNumbers = true;
         public float adsFieldOfView = 48f;
         public float switchTime = 0.22f;
         public Color tracerColor = new Color(1f, 0.83f, 0.25f, 1f);
         public GameObject impactPrefab;
         public ParticleSystem muzzleFlashPrefab;
+
+        [Header("Audio Hooks")]
+        public AudioClip fireAudioOverride;
+        public AudioClip suppressedFireAudioOverride;
+        public AudioClip reloadAudioOverride;
+        public AudioClip dryFireAudioOverride;
+        public AudioClip hitConfirmAudioOverride;
+        public AudioClip headshotConfirmAudioOverride;
+        public AudioClip killConfirmAudioOverride;
 
         [Header("Attachment Readiness")]
         public bool supportsOptic = true;

@@ -127,6 +127,7 @@ namespace BattleZoneMobile
             BotManager botManager = BuildBotManager(botPrefab);
             BuildVehicles(uiRefs);
             BuildWeaponTestArea(weaponRoster, lootPrefabs);
+            BuildGunFeelTestArea();
             BattleRoyaleMatchFlow matchFlow = BuildMatchFlow(playerRefs, uiRefs, lootPrefabs, botManager);
 
             GameObject managerObject = new GameObject("GameManager");
@@ -4276,6 +4277,7 @@ namespace BattleZoneMobile
             ReliablePlayerMovement reliableMovement = player.AddComponent<ReliablePlayerMovement>();
             WeaponController weapons = player.AddComponent<WeaponController>();
             CombatRecoilApplicator combatRecoil = player.AddComponent<CombatRecoilApplicator>();
+            GunFeelFeedbackController gunFeelFeedback = player.AddComponent<GunFeelFeedbackController>();
             CombatDebugWindow combatDebug = player.AddComponent<CombatDebugWindow>();
             ModularWeaponLoadout modularLoadout = player.AddComponent<ModularWeaponLoadout>();
             PlayerInventory inventory = player.AddComponent<PlayerInventory>();
@@ -4307,6 +4309,7 @@ namespace BattleZoneMobile
             WeaponModelRig weaponModelRig = placeholderAnimator.GetComponentInChildren<WeaponModelRig>();
             weapons.ConfigureForRuntime(mainCamera, muzzleObject.transform, controller, weaponModelRig, damageNumberPrefab, hitEffectPrefab, combatMask, pistol, rifle, smg, sniper, shotgun);
             combatRecoil.Configure(controller, null, uiRefs.UIManager);
+            gunFeelFeedback.Configure(uiRefs.UIManager, weapons, controller, reliableMovement, characterController);
             modularLoadout.ConfigureForRuntime(mainCamera, muzzleObject.transform, visualAnimator, controller, combatRecoil, null, combatMask, BuildStartingModularWeapons(weaponRoster));
             combatDebug.Configure(weapons, modularLoadout, combatRecoil, health);
             animationEventBridge?.Configure(weapons, null);
@@ -4318,6 +4321,7 @@ namespace BattleZoneMobile
             weapons.onFired.AddListener(controller.TriggerFireAnimation);
             weapons.onReloadStarted.AddListener(controller.TriggerReloadAnimation);
             weapons.onWeaponSwitchStarted.AddListener(controller.TriggerWeaponSwitchAnimation);
+            weapons.onKillConfirmed.AddListener(message => uiRefs.UIManager.AddKillFeed(message));
             health.onDamageTaken.AddListener((amount, hitPoint, hitNormal, source) => placeholderAnimator.TriggerHit(amount));
             health.onDied.AddListener(_ => placeholderAnimator.TriggerDeath());
 
@@ -4647,7 +4651,17 @@ namespace BattleZoneMobile
             definition.adsSpreadMultiplier = 0.48f;
             definition.hipSpreadMultiplier = 1.05f;
             definition.cameraKick = 0.7f;
+            definition.cameraVerticalKick = 0.58f;
+            definition.cameraHorizontalKick = 0.11f;
             definition.recoilRecovery = 18f;
+            definition.weaponKickDistance = 0.026f;
+            definition.weaponPitchKick = 1.35f;
+            definition.weaponReturnSpeed = 20f;
+            definition.crosshairFireBloom = 34f;
+            definition.crosshairMovementBloom = 20f;
+            definition.crosshairRecoverySpeed = 11f;
+            definition.aimSway = 0.075f;
+            definition.scopedBreathingSway = 0.025f;
             definition.adsFieldOfView = 46f;
             definition.switchTime = 0.18f;
             definition.tracerColor = new Color(1f, 0.86f, 0.24f, 1f);
@@ -4675,7 +4689,17 @@ namespace BattleZoneMobile
             definition.adsSpreadMultiplier = 0.52f;
             definition.hipSpreadMultiplier = 1.08f;
             definition.cameraKick = 0.34f;
+            definition.cameraVerticalKick = 0.32f;
+            definition.cameraHorizontalKick = 0.09f;
             definition.recoilRecovery = 17f;
+            definition.weaponKickDistance = 0.032f;
+            definition.weaponPitchKick = 1.15f;
+            definition.weaponReturnSpeed = 19f;
+            definition.crosshairFireBloom = 29f;
+            definition.crosshairMovementBloom = 28f;
+            definition.crosshairRecoverySpeed = 12f;
+            definition.aimSway = 0.085f;
+            definition.scopedBreathingSway = 0.035f;
             definition.adsFieldOfView = 44f;
             definition.switchTime = 0.28f;
             definition.tracerColor = new Color(1f, 0.72f, 0.22f, 1f);
@@ -4703,7 +4727,17 @@ namespace BattleZoneMobile
             definition.adsSpreadMultiplier = 0.58f;
             definition.hipSpreadMultiplier = 0.92f;
             definition.cameraKick = 0.24f;
+            definition.cameraVerticalKick = 0.22f;
+            definition.cameraHorizontalKick = 0.12f;
             definition.recoilRecovery = 21f;
+            definition.weaponKickDistance = 0.024f;
+            definition.weaponPitchKick = 0.82f;
+            definition.weaponReturnSpeed = 24f;
+            definition.crosshairFireBloom = 24f;
+            definition.crosshairMovementBloom = 34f;
+            definition.crosshairRecoverySpeed = 14f;
+            definition.aimSway = 0.095f;
+            definition.scopedBreathingSway = 0.025f;
             definition.adsFieldOfView = 48f;
             definition.switchTime = 0.22f;
             definition.tracerColor = new Color(0.7f, 0.95f, 1f, 1f);
@@ -4731,7 +4765,18 @@ namespace BattleZoneMobile
             definition.adsSpreadMultiplier = 0.22f;
             definition.hipSpreadMultiplier = 2.6f;
             definition.cameraKick = 1.45f;
+            definition.cameraVerticalKick = 1.38f;
+            definition.cameraHorizontalKick = 0.18f;
             definition.recoilRecovery = 11f;
+            definition.weaponKickDistance = 0.068f;
+            definition.weaponPitchKick = 3.2f;
+            definition.weaponReturnSpeed = 13f;
+            definition.crosshairFireBloom = 58f;
+            definition.crosshairMovementBloom = 42f;
+            definition.crosshairAimMultiplier = 0.42f;
+            definition.crosshairRecoverySpeed = 8f;
+            definition.aimSway = 0.055f;
+            definition.scopedBreathingSway = 0.16f;
             definition.adsFieldOfView = 36f;
             definition.switchTime = 0.38f;
             definition.tracerColor = new Color(1f, 0.42f, 0.26f, 1f);
@@ -4761,7 +4806,17 @@ namespace BattleZoneMobile
             definition.adsSpreadMultiplier = 0.72f;
             definition.hipSpreadMultiplier = 1.08f;
             definition.cameraKick = 1.05f;
+            definition.cameraVerticalKick = 0.92f;
+            definition.cameraHorizontalKick = 0.22f;
             definition.recoilRecovery = 13f;
+            definition.weaponKickDistance = 0.072f;
+            definition.weaponPitchKick = 3.6f;
+            definition.weaponReturnSpeed = 14f;
+            definition.crosshairFireBloom = 66f;
+            definition.crosshairMovementBloom = 30f;
+            definition.crosshairRecoverySpeed = 8.5f;
+            definition.aimSway = 0.11f;
+            definition.scopedBreathingSway = 0.04f;
             definition.adsFieldOfView = 43f;
             definition.switchTime = 0.34f;
             definition.tracerColor = new Color(1f, 0.62f, 0.18f, 1f);
@@ -4890,6 +4945,92 @@ namespace BattleZoneMobile
             runtimeLocationNames.Add("Weapon Test");
             runtimeLocationPositions.Add(Milestone24BWeaponTestAreaBuilder.DefaultOrigin);
 #endif
+        }
+
+        private void BuildGunFeelTestArea()
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            const string areaName = "M24C Gun Feel Test Area";
+            if (GameObject.Find(areaName) != null)
+            {
+                return;
+            }
+
+            GameObject root = new GameObject(areaName);
+            runtimeObjects.Add(root);
+            Vector3 origin = new Vector3(32f, 1.08f, -44f);
+            root.transform.position = origin;
+            runtimeLocationNames.Add("Gun Feel");
+            runtimeLocationPositions.Add(origin);
+
+            GameObject pad = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            pad.name = "M24C Gun Feel Range Pad";
+            pad.transform.SetParent(root.transform, false);
+            pad.transform.localPosition = new Vector3(0f, -0.12f, 22f);
+            pad.transform.localScale = new Vector3(20f, 0.18f, 80f);
+            Renderer padRenderer = pad.GetComponent<Renderer>();
+            if (padRenderer != null)
+            {
+                padRenderer.sharedMaterial = sidewalkMaterial != null ? sidewalkMaterial : roadMaterial;
+            }
+
+            pad.AddComponent<CombatSurface>().Configure(CombatSurfaceType.Stone);
+
+            CreateWeaponTestTarget(root.transform, origin + new Vector3(-5.5f, 0f, 12f), "M24C Close Target");
+            CreateWeaponTestTarget(root.transform, origin + new Vector3(0f, 0f, 32f), "M24C Medium Target");
+            CreateWeaponTestTarget(root.transform, origin + new Vector3(5.5f, 0f, 62f), "M24C Long Target");
+            CreateRecoilWall(root.transform, origin + new Vector3(0f, 2.1f, 74f));
+
+            CreateSurfaceTestPanel(root.transform, origin + new Vector3(-8f, 1.0f, 6f), CombatSurfaceType.Metal, m20MetalMaterial, "Gun Feel Metal");
+            CreateSurfaceTestPanel(root.transform, origin + new Vector3(-8f, 1.0f, 9f), CombatSurfaceType.Wood, fenceMaterial, "Gun Feel Wood");
+            CreateSurfaceTestPanel(root.transform, origin + new Vector3(-8f, 1.0f, 12f), CombatSurfaceType.Glass, windowMaterial, "Gun Feel Glass");
+#endif
+        }
+
+        private void CreateRecoilWall(Transform parent, Vector3 position)
+        {
+            GameObject wall = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            wall.name = "M24C Recoil Spray Wall";
+            wall.transform.SetParent(parent, true);
+            wall.transform.position = position;
+            wall.transform.localScale = new Vector3(12f, 4.2f, 0.28f);
+            Renderer renderer = wall.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.sharedMaterial = roadMaterial != null ? roadMaterial : coverMaterial;
+            }
+
+            wall.AddComponent<CombatSurface>().Configure(CombatSurfaceType.Stone);
+
+            for (int i = -5; i <= 5; i++)
+            {
+                CreateRecoilWallLine(parent, position + new Vector3(i, 0f, -0.2f), new Vector3(0.035f, 4.4f, 0.04f));
+            }
+
+            for (int i = -2; i <= 2; i++)
+            {
+                CreateRecoilWallLine(parent, position + new Vector3(0f, i * 0.8f, -0.21f), new Vector3(12.2f, 0.035f, 0.04f));
+            }
+        }
+
+        private void CreateRecoilWallLine(Transform parent, Vector3 position, Vector3 scale)
+        {
+            GameObject line = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            line.name = "M24C Recoil Wall Reference Line";
+            line.transform.SetParent(parent, true);
+            line.transform.position = position;
+            line.transform.localScale = scale;
+            Renderer renderer = line.GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                renderer.sharedMaterial = sidewalkMaterial != null ? sidewalkMaterial : vehicleAccentMaterial;
+            }
+
+            Collider collider = line.GetComponent<Collider>();
+            if (collider != null)
+            {
+                Destroy(collider);
+            }
         }
 
         private void PlaceTestAmmoPickup(Transform parent, LootItem[] lootPrefabs, LootKind kind, Vector3 position)
@@ -5411,7 +5552,7 @@ namespace BattleZoneMobile
             uiRefs.ButtonScaleSlider.onValueChanged.AddListener(uiRefs.ButtonLayout.SetButtonScale);
             playerRefs.Weapons.onHitConfirmed.AddListener((hitPoint, damage) => uiRefs.HitMarker.ShowHit());
             playerRefs.Weapons.onHeadshotConfirmed.AddListener(uiRefs.HeadshotMarker.ShowHeadshot);
-            playerRefs.Weapons.onFired.AddListener(uiRefs.UIManager.PulseCrosshair);
+            playerRefs.Weapons.onFired.AddListener(() => uiRefs.UIManager.PulseCrosshair(playerRefs.Weapons.CurrentDefinition != null ? playerRefs.Weapons.CurrentDefinition.crosshairFireBloom : 42f));
 
             uiRefs.PauseButton.onClick.AddListener(() =>
             {

@@ -52,6 +52,7 @@ namespace BattleZoneMobile
         private Coroutine killFeedRoutine;
         private Coroutine matchAnnouncementRoutine;
         private float crosshairCurrentSize;
+        private float crosshairFeedbackSize;
         private bool zoneWarningOverlayActive;
         private float lastDamageFlashTime = -999f;
         private readonly Vector2 minimapWorldHalfExtents = new Vector2(260f, 260f);
@@ -130,7 +131,8 @@ namespace BattleZoneMobile
                 return;
             }
 
-            crosshairCurrentSize = Mathf.Lerp(crosshairCurrentSize, crosshairBaseSize, crosshairReturnSpeed * Time.unscaledDeltaTime);
+            float targetSize = Mathf.Max(crosshairBaseSize, crosshairFeedbackSize);
+            crosshairCurrentSize = Mathf.Lerp(crosshairCurrentSize, targetSize, crosshairReturnSpeed * Time.unscaledDeltaTime);
             crosshairRect.sizeDelta = new Vector2(crosshairCurrentSize, crosshairCurrentSize);
         }
 
@@ -455,6 +457,35 @@ namespace BattleZoneMobile
         public void PulseCrosshair()
         {
             crosshairCurrentSize = crosshairBloomSize;
+        }
+
+        public void PulseCrosshair(float bloomSize)
+        {
+            crosshairCurrentSize = Mathf.Max(crosshairCurrentSize, crosshairBaseSize + Mathf.Max(0f, bloomSize));
+        }
+
+        public void SetCrosshairFeedback(float movement01, bool aiming, bool crouching, bool prone, float weaponBloom, WeaponDefinition definition)
+        {
+            float movementBloom = definition != null ? definition.crosshairMovementBloom : 26f;
+            float fireBloom = Mathf.Max(0f, weaponBloom);
+            float targetBloom = Mathf.Clamp01(movement01) * movementBloom + fireBloom;
+
+            if (aiming)
+            {
+                targetBloom *= definition != null ? definition.crosshairAimMultiplier : 0.58f;
+            }
+
+            if (prone)
+            {
+                targetBloom *= definition != null ? definition.crosshairProneMultiplier : 0.56f;
+            }
+            else if (crouching)
+            {
+                targetBloom *= definition != null ? definition.crosshairCrouchMultiplier : 0.74f;
+            }
+
+            crosshairFeedbackSize = crosshairBaseSize + targetBloom;
+            crosshairReturnSpeed = definition != null ? Mathf.Clamp(definition.crosshairRecoverySpeed, 4f, 24f) : crosshairReturnSpeed;
         }
 
         public void FlashDamage()
