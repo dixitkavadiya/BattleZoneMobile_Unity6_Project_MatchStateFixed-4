@@ -1,5 +1,14 @@
 # BattleZone Mobile Changelog
 
+## Pickup Controls Hotfix
+
+- Added direct Editor/Desktop pickup controls: `E` picks up the highlighted item and `F` works as a fallback.
+- Made the visible pickup prompt clickable with the left mouse button, so clicking `Press E to pick up` picks up the highlighted item.
+- Added a visible `PICKUP` HUD button that appears whenever a pickup is in range and calls the same focused-pickup path for mobile and touch testing.
+- Updated prompt copy to show `Press E to pick up` on desktop/editor and `Tap PICKUP` on mobile.
+- Hardened pickup execution by disabling the picked object's colliders and GameObject immediately before inventory handoff, preventing duplicate pickup calls in the same frame.
+- Preserved movement, fire, reload, camera, Animator placement, aircraft/freefall/landing flow, damage overlay fixes, and previous weapon test area behavior.
+
 ## Milestone 24B - Live Weapon Test Area and Pickups
 
 - Added `AdvancedWeaponPickup` so Milestone 24B `AdvancedWeaponData` weapons can exist as live ground loot with visible labels, collider support, pickup prompts, inventory handoff, and safe slot replacement.

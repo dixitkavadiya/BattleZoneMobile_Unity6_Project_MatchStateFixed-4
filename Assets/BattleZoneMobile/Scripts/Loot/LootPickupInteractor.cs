@@ -12,15 +12,25 @@ namespace BattleZoneMobile
         [SerializeField] private float scanRadius = 1.6f;
         [SerializeField] private LayerMask lootMask = ~0;
         [SerializeField] private Text promptText;
+        [SerializeField] private Button pickupButton;
 
         private Component focusedPickup;
+        private Button promptClickButton;
 
         public void ConfigureForRuntime(Camera camera, PlayerInventory playerInventory, Text pickupPrompt, LayerMask mask)
+        {
+            ConfigureForRuntime(camera, playerInventory, pickupPrompt, null, mask);
+        }
+
+        public void ConfigureForRuntime(Camera camera, PlayerInventory playerInventory, Text pickupPrompt, Button mobilePickupButton, LayerMask mask)
         {
             playerCamera = camera;
             inventory = playerInventory;
             promptText = pickupPrompt;
+            pickupButton = mobilePickupButton;
             lootMask = mask;
+            ConfigurePromptClickTarget();
+            ConfigurePickupButton();
         }
 
         private void Awake()
@@ -34,12 +44,21 @@ namespace BattleZoneMobile
             {
                 inventory = GetComponent<PlayerInventory>();
             }
+
+            ConfigurePromptClickTarget();
+            ConfigurePickupButton();
         }
 
         private void Update()
         {
             focusedPickup = FindClosestPickup();
             UpdatePrompt();
+
+            if (WasKeyboardPickupPressed())
+            {
+                PickUpFocused();
+                return;
+            }
 
             if (WasPickupTapped(out Vector2 screenPosition))
             {
@@ -50,6 +69,11 @@ namespace BattleZoneMobile
         public void PickUpFocused()
         {
             PickUpComponent(focusedPickup);
+        }
+
+        private bool WasKeyboardPickupPressed()
+        {
+            return Input.GetKeyDown(KeyCode.E) || Input.GetKeyDown(KeyCode.F);
         }
 
         private bool WasPickupTapped(out Vector2 screenPosition)
@@ -141,11 +165,18 @@ namespace BattleZoneMobile
             promptText.enabled = focusedPickup != null;
             if (focusedPickup is AdvancedWeaponPickup weaponPickup)
             {
-                promptText.text = $"Tap to pick up [{weaponPickup.RarityLabel}] {weaponPickup.DisplayName}";
+                promptText.text = BuildPromptText(weaponPickup.RarityLabel, weaponPickup.DisplayName);
             }
             else if (focusedPickup is LootItem loot)
             {
-                promptText.text = $"Tap to pick up [{loot.RarityLabel}] {loot.DisplayName}";
+                promptText.text = BuildPromptText(loot.RarityLabel, loot.DisplayName);
+            }
+
+            if (pickupButton != null)
+            {
+                bool hasPickup = focusedPickup != null;
+                pickupButton.gameObject.SetActive(hasPickup);
+                pickupButton.interactable = hasPickup;
             }
         }
 
@@ -167,6 +198,20 @@ namespace BattleZoneMobile
 
         private void PickUpComponent(Component pickup)
         {
+            if (pickup == null || inventory == null)
+            {
+                return;
+            }
+
+            GameObject pickupObject = pickup.gameObject;
+            if (pickupObject == null || !pickupObject.activeInHierarchy)
+            {
+                return;
+            }
+
+            DisablePickupColliders(pickupObject);
+            pickupObject.SetActive(false);
+
             if (pickup is AdvancedWeaponPickup weaponPickup)
             {
                 weaponPickup.PickUp(inventory);
@@ -174,6 +219,56 @@ namespace BattleZoneMobile
             else if (pickup is LootItem loot)
             {
                 loot.PickUp(inventory);
+            }
+
+            focusedPickup = null;
+            UpdatePrompt();
+        }
+
+        private void ConfigurePromptClickTarget()
+        {
+            if (promptText == null)
+            {
+                return;
+            }
+
+            promptText.raycastTarget = true;
+            promptClickButton = promptText.GetComponent<Button>();
+            if (promptClickButton == null)
+            {
+                promptClickButton = promptText.gameObject.AddComponent<Button>();
+            }
+
+            promptClickButton.targetGraphic = promptText;
+            promptClickButton.transition = Selectable.Transition.None;
+            promptClickButton.onClick.RemoveListener(PickUpFocused);
+            promptClickButton.onClick.AddListener(PickUpFocused);
+        }
+
+        private void ConfigurePickupButton()
+        {
+            if (pickupButton == null)
+            {
+                return;
+            }
+
+            pickupButton.onClick.RemoveListener(PickUpFocused);
+            pickupButton.onClick.AddListener(PickUpFocused);
+            pickupButton.gameObject.SetActive(false);
+        }
+
+        private static string BuildPromptText(string rarity, string displayName)
+        {
+            string action = Application.isMobilePlatform ? "Tap PICKUP" : "Press E to pick up";
+            return $"{action}\n[{rarity}] {displayName}";
+        }
+
+        private static void DisablePickupColliders(GameObject pickupObject)
+        {
+            Collider[] colliders = pickupObject.GetComponentsInChildren<Collider>(true);
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                colliders[i].enabled = false;
             }
         }
     }

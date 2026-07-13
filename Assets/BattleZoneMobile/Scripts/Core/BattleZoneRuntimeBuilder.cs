@@ -4111,8 +4111,10 @@ namespace BattleZoneMobile
             Text medkitText = CreateText("MedkitText", hudPanel.transform, font, "Medkits 0", 28, TextAnchor.MiddleLeft, new Vector2(-758f, 420f), new Vector2(300f, 50f));
             Text botsText = CreateText("BotsAliveText", hudPanel.transform, font, "Bots 5", 28, TextAnchor.MiddleCenter, new Vector2(0f, 476f), new Vector2(240f, 50f));
             Text zoneText = CreateText("ZoneText", hudPanel.transform, font, "Safe | Zone 95m | Shrink 60s", 26, TextAnchor.MiddleCenter, new Vector2(0f, 426f), new Vector2(720f, 50f));
-            Text pickupPrompt = CreateText("PickupPrompt", hudPanel.transform, font, "", 28, TextAnchor.MiddleCenter, new Vector2(0f, -300f), new Vector2(720f, 50f));
+            Text pickupPrompt = CreateText("PickupPrompt", hudPanel.transform, font, "", 24, TextAnchor.MiddleCenter, new Vector2(0f, -278f), new Vector2(720f, 78f));
             pickupPrompt.color = new Color(1f, 0.94f, 0.56f);
+            Button pickupButton = CreateButton("PickupButton", hudPanel.transform, font, "PICKUP", new Vector2(0f, -356f), new Vector2(230f, 70f), new Color(0.16f, 0.48f, 0.36f));
+            pickupButton.gameObject.SetActive(false);
             Text vehiclePrompt = CreateText("VehiclePrompt", hudPanel.transform, font, "", 26, TextAnchor.MiddleCenter, new Vector2(0f, -352f), new Vector2(760f, 46f));
             vehiclePrompt.color = new Color(0.62f, 1f, 0.88f);
             Text vehicleStatusText = CreateText("VehicleStatusText", hudPanel.transform, font, "", 24, TextAnchor.MiddleCenter, new Vector2(0f, 384f), new Vector2(760f, 42f));
@@ -4186,6 +4188,7 @@ namespace BattleZoneMobile
                 Joystick = joystick,
                 LookArea = lookArea,
                 PickupPrompt = pickupPrompt,
+                PickupButton = pickupButton,
                 StartButton = startButton,
                 GameOverRestartButton = gameOverRestartButton,
                 VictoryRestartButton = victoryRestartButton,
@@ -4308,7 +4311,7 @@ namespace BattleZoneMobile
             combatDebug.Configure(weapons, modularLoadout, combatRecoil, health);
             animationEventBridge?.Configure(weapons, null);
             inventory.ConfigureForRuntime(weapons, health, modularLoadout);
-            pickup.ConfigureForRuntime(mainCamera, inventory, uiRefs.PickupPrompt, lootMask);
+            pickup.ConfigureForRuntime(mainCamera, inventory, uiRefs.PickupPrompt, uiRefs.PickupButton, lootMask);
             vehicleInteractor.ConfigureForRuntime(controller, weapons, uiRefs.VehiclePrompt);
             uiRefs.HudTelemetry.Configure(player.transform, mainCamera, uiRefs.CompassText, uiRefs.MinimapArrow, uiRefs.MinimapZoneRing, uiRefs.MinimapLabel, uiRefs.MinimapNextZoneRing);
             uiRefs.HudTelemetry.ConfigureNamedLocations(runtimeLocationNames.ToArray(), runtimeLocationPositions.ToArray(), uiRefs.MinimapLocation);
@@ -5578,6 +5581,7 @@ namespace BattleZoneMobile
             public FloatingJoystick Joystick;
             public MobileLookArea LookArea;
             public Text PickupPrompt;
+            public Button PickupButton;
             public Button StartButton;
             public Button GameOverRestartButton;
             public Button VictoryRestartButton;

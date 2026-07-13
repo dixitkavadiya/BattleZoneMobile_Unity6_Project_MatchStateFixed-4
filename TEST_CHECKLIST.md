@@ -1,5 +1,37 @@
 # BattleZone Mobile - Test Checklist
 
+## Pickup Controls Hotfix
+
+Automated/static checks run in this workspace:
+
+- PASS: Runtime C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+- PASS: `LootPickupInteractor` has keyboard pickup through `E` and fallback `F`.
+- PASS: `LootPickupInteractor` makes the pickup prompt clickable through a `Button` on the prompt `Text`.
+- PASS: Runtime HUD creates `PickupButton` and passes it to `LootPickupInteractor`.
+- PASS: Pickup prompt copy resolves to `Press E to pick up` on Editor/Desktop and `Tap PICKUP` on mobile.
+- PASS: All pickup actions call the same `PickUpFocused()` path.
+- PASS: Picked objects disable colliders and deactivate immediately before inventory handoff to prevent duplicate pickup calls.
+- PASS: No movement, fire, reload, camera, Animator placement, aircraft/freefall/landing, red overlay, or weapon-test-area code paths were redesigned.
+
+Required manual Unity Play Mode checks:
+
+1. Open `Assets/BattleZoneMobile/Scenes/BZ_Main.unity`.
+2. Press Play and confirm no red Console errors.
+3. Start a match and land normally.
+4. Walk to the `M24B Live Weapon Test Area`.
+5. Approach `Breacher-12` or the existing shotgun pickup and confirm the prompt says `Press E to pick up`.
+6. Press `E` and confirm the shotgun pickup works.
+7. Repeat with another pickup and press `F`; confirm fallback pickup works.
+8. Approach a backpack pickup and confirm the prompt appears.
+9. Press `E` or tap/click `PICKUP`; confirm backpack pickup updates inventory/backpack capacity.
+10. Approach ammo, helmet, vest, medkit, and bandage pickups; confirm each can be picked up with the same controls.
+11. Confirm equipped weapon changes correctly after picking up a weapon.
+12. Confirm inventory and pickup message update after each pickup.
+13. Confirm a pickup cannot be collected twice by rapid-clicking or pressing `E` and `F` together.
+14. Left-click directly on the pickup prompt and confirm it picks up the highlighted item.
+15. In a mobile/touch test, confirm the visible `PICKUP` button appears in range and tapping it picks up the highlighted item.
+16. Confirm WASD, mobile joystick, fire, reload, camera, sprint, jump, crouch, prone, Animator, aircraft/freefall/landing, and red overlay fixes still work.
+
 ## Milestone 24B - Live Weapon Test Area and Pickups
 
 Automated/static checks run in this workspace:

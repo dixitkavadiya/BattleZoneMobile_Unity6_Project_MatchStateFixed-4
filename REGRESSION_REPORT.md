@@ -1,5 +1,39 @@
 # BattleZone Mobile - Regression Report
 
+## Pickup Controls Hotfix - 2026-07-13
+
+Scope:
+
+- Current project only: `BattleZoneMobile_Unity6_Project_MatchStateFixed-4`.
+- Fix item pickup controls without changing movement, camera, combat, Animator placement, aircraft/freefall/landing, match flow, red overlay, or weapon definitions.
+
+Root issue:
+
+- Pickup prompts appeared correctly, but the visible prompt was only text and the interactor relied on world-raycast mouse/touch input. In the Unity Editor, clicking the UI prompt did not clearly execute pickup, and there was no direct keyboard pickup path.
+
+Fix applied:
+
+- Added `E` and `F` pickup keys in `LootPickupInteractor`.
+- Added a clickable prompt button on the existing pickup prompt text.
+- Added a visible runtime HUD `PickupButton` labeled `PICKUP` and wired it to the same focused-pickup action.
+- Updated prompt text to show `Press E to pick up` on desktop/editor and `Tap PICKUP` on mobile.
+- Disabled picked-object colliders and deactivated the pickup immediately before inventory handoff to prevent duplicate pickup calls.
+
+Regression audit results:
+
+- PASS: `ReliablePlayerMovement` was not modified.
+- PASS: `ThirdPersonMobileController` was not modified.
+- PASS: `BattleRoyaleMatchFlow` was not modified.
+- PASS: Animator placement and root-motion behavior were not modified.
+- PASS: Damage overlay scripts were not modified.
+- PASS: Weapon fire/reload logic was not modified.
+- PASS: Runtime C# scripts compile with Unity 6.5 Roslyn references with zero errors and zero warnings.
+
+Unity Editor verification:
+
+- NOT RUN: Live Unity Play Mode remains blocked in this environment by Unity Hub/license activation.
+- Required manual pickup verification is listed in `TEST_CHECKLIST.md`.
+
 ## Milestone 24B Live Weapon Test Area and Pickups - 2026-07-13
 
 Scope:

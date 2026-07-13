@@ -17,6 +17,7 @@ Deliverable zip: `BattleZoneMobile_Unity6_Project_MatchStateFixed.zip`
 
 ## What Changed
 
+- Added clear pickup controls: `E` and `F` pick up the highlighted item in Editor/Desktop, the pickup prompt is clickable, and a visible `PICKUP` button appears when loot is in range.
 - Added Milestone 24B live weapon pickup test area support.
 - Added editor command `BattleZone Tools > Build Milestone 24B Weapon Test Area` to rebuild/repair `M24B Live Weapon Test Area` in `BZ_Main`.
 - Added Editor/development-build runtime fallback so `BZ_Main` creates `M24B Live Weapon Test Area` once if it is missing at startup.
